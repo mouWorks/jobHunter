@@ -8,10 +8,20 @@ use App\Models\Job;
 use Exception;
 
 /**
-* 爬蟲
-*/
+ * 爬蟲
+ */
 class Crawler104
 {
+    /**
+     * 標準 Error 輸出格式
+     * @var array
+     */
+    private static $errorOutput =  [
+        'employees' => -1,
+        'capital'   => -1,
+        'url'       => NULL,
+    ];
+
     public static function get_company($j_code = '')
     {
         return self::get_company_2019($j_code);
@@ -28,27 +38,20 @@ class Crawler104
         $url = "https://www.104.com.tw/jobbank/custjob/index.php?r=cust&j={$j_code}";
         $data = Curl::get_response($url);
 
-        if ($data['status'])
-        {
-            $start_pos = strpos($data['data'], '<dl>');
-            $end_pos = strpos($data['data'], '</dl>');
-            $str = substr($data['data'], $start_pos, $end_pos - $start_pos + 1);
-            preg_match_all('/<dd>(.*)<\/dd>/', $str, $matches);
+        if ( ! $data['status']){
+            return self::$errorOutput;
+        }
 
-            return [
-                'employees' => $matches[1][2],
-                'capital'   => Lib::capital2number($matches[1][3]),
-                'url'       => isset($matches[1][7]) ? $matches[1][7] : NULL,
-            ];
-        }
-        else
-        {
-            return [
-                'employees' => -1,
-                'capital'   => -1,
-                'url'       => NULL,
-            ];
-        }
+        $start_pos = strpos($data['data'], '<dl>');
+        $end_pos = strpos($data['data'], '</dl>');
+        $str = substr($data['data'], $start_pos, $end_pos - $t_pos + 1);
+        preg_match_all('/<dd>(.*)<\/dd>/', $str, $matches);
+
+        return [
+            'employees' => $matches[1][2],
+            'capital'   => Lib::capital2number($matches[1][3]),
+            'url'       => isset($matches[1][7]) ? $matches[1][7] : NULL,
+        ];
     }
 
     /**
@@ -63,11 +66,7 @@ class Crawler104
 
         if ( ! $data['status'])
         {
-            return [
-                'employees' => -1,
-                'capital'   => -1,
-                'url'       => NULL,
-            ];
+            return self::$errorOutput;
         }
 
         // 找公司新網址
@@ -76,11 +75,7 @@ class Crawler104
 
         if ( ! isset($matches[1][0])) {
             // throw new Exception("找不到公司的網址。");
-            return [
-                'employees' => -1,
-                'capital'   => -1,
-                'url'       => NULL,
-            ];
+            return self::$errorOutput;
         }
         $company_new_url = $matches[1][0];
 
@@ -94,11 +89,7 @@ class Crawler104
 
         if ( ! $data['status'])
         {
-            return [
-                'employees' => -1,
-                'capital'   => -1,
-                'url'       => NULL,
-            ];
+            return self::$errorOutput;
         }
         $company_data = json_decode($data['data'], true);
 
