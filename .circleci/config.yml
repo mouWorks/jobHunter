@@ -1,0 +1,66 @@
+version: 2.1
+
+orbs:
+  slack: circleci/slack@3.3.0
+
+jobs:
+  build:
+    docker:
+      - image: circleci/7.1.32-fpm
+
+    working_directory: ~/jobHunter
+    environment:
+      - SOURCE_BRANCH: src
+      - TARGET_BRANCH: master
+      - ZIPFILE_NAME: cc-code.tar.gz
+    steps:
+      - checkout
+#      - add_ssh_keys:
+#          fingerprints:
+#            - "9e:b2:7d:7f:da:69:a4:7f:e6:a8:92:33:76:a1:31:e4" # DigitalOcean Manually created this key
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+
+      - run:
+          name: Install dependencies
+          command: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run:
+          name: Show Current Location
+          command: pwd
+
+      - run:
+          name: Install phpUnit 7.5 phar
+          command: |
+            wget https://phar.phpunit.de/phpunit-7.5.phar
+            chmod +x phpunit-7.5.phar
+            mv phpunit-7.5.phar phpunit
+
+      - run:
+          name: Run Unit Test
+          command: |
+            ./phpunit --exclude-group ignore --testdox
+
+      - slack/notify:
+          title: "jobHunter 更新完成"
+          message: "https://jobhunter.manycat.com.tw 剛剛更新"
+          color: "#42e2f4" # Optional: Assign custom colors for each notification
+          webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
+workflows:
+  version: 2.1
+  build_and_auto_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - 001_Refactor_MySQL
