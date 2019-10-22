@@ -7,7 +7,6 @@ jobs:
   build:
     docker:
       - image: circleci/php:7.1.32-fpm-node
-
     working_directory: ~/jobHunter
     environment:
       - SOURCE_BRANCH: src
