@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: circleci/7.1.32
+      - image: circleci/php:7.1.32
 
     working_directory: ~/jobHunter
     environment:
@@ -64,9 +64,11 @@ jobs:
           command: |
             ./phpunit --exclude-group ignore --testdox
 
-      - slack/notify:
-          title: "jobHunter 更新完成"
-          message: "https://jobhunter.manycat.com.tw 剛剛更新"
+      - slack/status:
+          title: "jobHunter 更新"
+          failure_message: "CI build Fail! , Check CircleCI"
+          success_message: "https://jobhunter.manycat.com.tw CI build Finished."
+          include_visit_job_action: true
           color: "#42e2f4" # Optional: Assign custom colors for each notification
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
 workflows:
