@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: circleci/7.1.32-fpm
+      - image: circleci/7.1.32
 
     working_directory: ~/jobHunter
     environment:
@@ -19,19 +19,34 @@ jobs:
 #          fingerprints:
 #            - "9e:b2:7d:7f:da:69:a4:7f:e6:a8:92:33:76:a1:31:e4" # DigitalOcean Manually created this key
 
+      # Download and cache dependencies
+      # PHP - Composer Packages
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+            # "composer.lock" can be used if it is committed to the repo
+            - v1-dependencies-{{ checksum "composer.json" }}
+            # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run:
-          name: Install dependencies
-          command: npm install
+      - run: composer install -n --prefer-dist
 
       - save_cache:
+          key: v1-dependencies-{{ checksum "composer.json" }}
+          paths:
+            - ./vendor
+
+      # NodeJS - Node Modules
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}
+            - node-v1-
+
+      - run: yarn install
+
+      - save_cache:
+          key: node-v1-{{ checksum "package.json" }}
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
 
       - run:
           name: Show Current Location
