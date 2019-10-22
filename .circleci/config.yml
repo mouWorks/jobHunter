@@ -65,11 +65,10 @@ jobs:
             ./phpunit --exclude-group ignore --testdox
 
       - slack/status:
-#          title: "jobHunter 更新"
+          channel: "jobhunter-ci"
           failure_message: "CI build Fail! , Check CircleCI"
           success_message: "https://jobhunter.manycat.com.tw CI build Finished."
           include_visit_job_action: true
-#          color: "#42e2f4" # Optional: Assign custom colors for each notification
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
 workflows:
   version: 2.1
