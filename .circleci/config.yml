@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@3.3.0
+  slack: circleci/slack@3.4.0
 
 jobs:
   build:
@@ -64,7 +64,7 @@ jobs:
             ./phpunit --exclude-group ignore --testdox
 
       - slack/status:
-          channel: jobhunter-ci
+          channel: 'jobhunter-ci'
           failure_message: "CI build Fail! , Check CircleCI"
           success_message: "https://jobhunter.manycat.com.tw CI build Finished."
           include_visit_job_action: true
