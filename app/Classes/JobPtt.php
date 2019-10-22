@@ -39,7 +39,7 @@ class JobPtt extends JobBase
      */
     public function update($condition = [])
     {
-    	//先抓第一頁
+        //先抓第一頁
     	if ($this->clawer_first_page())
     	{
     		//有頁數後開始往後抓
@@ -49,7 +49,7 @@ class JobPtt extends JobBase
     		$this->clawer_job_page();
     		
     	}
-    	
+
         //return view('update_report', ['source' => self::class]);
     }
     
@@ -118,7 +118,7 @@ class JobPtt extends JobBase
     	foreach ($this->_ptt_list_url as  $num =>  $url)
     	{
     		$result = Curl::get_response($url);
-    
+
     		if (!$result['status'])
     		{
     			echo "取不到該筆資料 ". $url;
@@ -142,12 +142,19 @@ class JobPtt extends JobBase
     		
     		if ($companyID)
     		{
-	     		$job_data['description']  = $this->_find_job_description($content);
+                $job_data['description']  = $this->_find_job_description($content);
 	     		$job_data['source_url']   = $url;
 				$job_data['source']       = 'ptt';
 				$job_data['j_code']       = $this->_gen_hash_code($job_data['title']);
 				$job_data['companyID']    = $companyID;
 				$job_data['appear_date']    = $this->_find_postdate($content);
+
+                $salary = $this->_find_salary($job_data['description']);
+
+                if (!empty($salary)) {
+                    $job_data['sal_month_low'] = $salary[0];
+                    $job_data['sal_month_high'] = $salary[1];
+                }
 				
 				$jobID = Job::insert($job_data);
     		}
@@ -303,5 +310,22 @@ class JobPtt extends JobBase
     public function search($param = [])
     {
         return Job::search($param);
+    }
+
+    private function _find_salary(string $descript)
+    {
+        $descript = str_replace(' ', '', $descript);
+        $descript = str_replace(',', '', $descript);
+
+        $patten = '/薪資\D*(\d*|\d*[K|k])[~|-](\d*|\d*[K|k])/';
+
+        $match = [];
+
+        if (!preg_match($patten, $descript, $match))
+        {
+            return [];
+        }
+
+        return [$match[1], $match[2]];
     }
 }
