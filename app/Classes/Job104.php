@@ -292,4 +292,20 @@ class Job104 extends JobBase
         $content = file_get_contents($file);
         return "<pre>" .  print_r(json_decode($content), TRUE). "</pre>";
     }
+
+    public function get_jobs($conditions)
+    {
+        // 設定更新時的查詢條件
+        if ($conditions)
+        {
+            $this->_set_update_condition($conditions);
+        }
+
+        // 取得 api 網址，查詢資料
+        $url = $this->_get_api_url();
+        $json_data = Curl::get_json_data($url);
+
+        return $json_data;
+    }
+
 }
