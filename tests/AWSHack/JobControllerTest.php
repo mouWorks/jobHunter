@@ -1,5 +1,6 @@
 <?php
 
+
 class JobControllerTest extends TestCase
 {
     public function testJobController104JobSuccess()
@@ -8,7 +9,7 @@ class JobControllerTest extends TestCase
         $this->withoutMiddleware();
 
         // act
-        $response = $this->post(route('awshack.job.show', ['source' => '104']));
+        $response = $this->get(route('awshack.job.show', ['source' => '104']));
 
         // assert
         $response->assertResponseOk();

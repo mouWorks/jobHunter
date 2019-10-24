@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\AWSHack;
 
 use App\Classes\JobBase;
+use App\Models\Company;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
@@ -32,8 +33,16 @@ class JobController extends Controller
             'kwop' => 3,
         ];
 
-        $data = $job->get_jobs($conditions);
+        $response = $job->get_jobs($conditions);
 
-        return new JsonResponse($data);
+//        $company_data = $this->_convert_company_row_data($row);
+//
+//        $companyID = Company::insert($company_data);
+
+        // todo combine company data
+
+
+
+        return new JsonResponse($response);
     }
 }

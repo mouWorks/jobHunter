@@ -2,10 +2,12 @@
 namespace App\Classes;
 
 use App\Classes\JobBase;
+use GuzzleHttp\Promise;
 use App\Library\Curl;
 use App\Library\Debug;
 use App\Models\Company;
 use App\Models\Job;
+use GuzzleHttp\Client;
 
 
 /**
@@ -304,6 +306,42 @@ class Job104 extends JobBase
         // 取得 api 網址，查詢資料
         $url = $this->_get_api_url();
         $json_data = Curl::get_json_data($url);
+
+        $c_codes = array_column($json_data['data'], 'C');
+
+        $companies = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code');
+        $not_exist_companies = [];
+
+        foreach ($json_data['data'] as $job) {
+            if (empty($companies[$job['C']])) {
+                $company_data = $this->_convert_company_row_data($job);
+//                Company::insert($company_data);
+                $companies[$job['C']] = $company_data;
+                $not_exist_companies[] = $job['C'];
+            }
+        }
+
+        if (!empty($not_exist_companies)) {
+            $url = "http://www.104.com.tw/jobbank/custjob/";
+
+//            dd((new Client(['verify' => false]))->request('get', $url . "/index.php?r=cust&j={$not_exist_companies[0]}")->getBody()->getContents());
+//
+            $client = new Client(['base_uri' => $url]);
+
+            foreach ($not_exist_companies as $c_code) {
+                $promises[$c_code] = $client->getAsync("/index.php?r=cust&j={$c_code}");
+            }
+
+            $results = Promise\settle($promises)->wait();
+
+            dd([array_column($results, 'state'), date('Y-m-d H:i:s')]);
+
+            foreach ($results as $result) {
+                dd($result);
+            }
+        }
+
+        // todo combine company with job data
 
         return $json_data;
     }

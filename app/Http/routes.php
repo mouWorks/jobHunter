@@ -31,7 +31,7 @@ Route::get('/old_list', 'UpdateController@index');
 Route::get('/old_list/{source}', 'UpdateController@index');
 
 // AWSHack
-Route::post('/awshack/jobs/{source}', 'AWSHack\JobController@get_job')->name('awshack.job.show');
+Route::get('/awshack/jobs/{source}', 'AWSHack\JobController@get_job')->name('awshack.job.show');
 
 // 爬蟲
 Route::get('/crawler/company/get/{companyID}', 'CrawlerController@get_company');
