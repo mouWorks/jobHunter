@@ -211,7 +211,7 @@ class Job104 extends JobBase
         {
             return ['資料取得錯誤'];
         }
-        
+
         // 寫入資料
         if ( ! $this->_preview_mode)
         {
@@ -224,16 +224,16 @@ class Job104 extends JobBase
                 	echo "該筆垃圾 ";
                 	continue;
                 }
-                
+
             	$company_data = $this->_convert_company_row_data($row);
-            	
+
                 $companyID = Company::insert($company_data);
 
                 // 寫入 job 資料表
                 $job_data = $this->_convert_job_row_data($row);
-                
+
                 $job_data['companyID'] = $companyID;
-                
+
                 //var_dump($job_data);
                 $jobID = Job::insert($job_data);
             }
@@ -315,33 +315,46 @@ class Job104 extends JobBase
         foreach ($json_data['data'] as $job) {
             if (empty($companies[$job['C']])) {
                 $company_data = $this->_convert_company_row_data($job);
-//                Company::insert($company_data);
+                Company::insert($company_data);
                 $companies[$job['C']] = $company_data;
                 $not_exist_companies[] = $job['C'];
             }
         }
 
         if (!empty($not_exist_companies)) {
-            $url = "http://www.104.com.tw/jobbank/custjob/";
 
-//            dd((new Client(['verify' => false]))->request('get', $url . "/index.php?r=cust&j={$not_exist_companies[0]}")->getBody()->getContents());
+            // 非同步取得company url fake id
+            $url = "https://www.104.com.tw/";
 //
-            $client = new Client(['base_uri' => $url]);
+            $url_id_client = new Client(['base_uri' => $url]);
+            $company_client = new Client(['base_uri' => $url]);
 
             foreach ($not_exist_companies as $c_code) {
-                $promises[$c_code] = $client->getAsync("/index.php?r=cust&j={$c_code}");
+                $fake_id_promises[$c_code] = $url_id_client->getAsync("/jobbank/custjob/index.php?r=cust&j={$c_code}");
             }
 
-            $results = Promise\settle($promises)->wait();
+            $url_id_results = Promise\settle($fake_id_promises)->wait();
 
-            dd([array_column($results, 'state'), date('Y-m-d H:i:s')]);
+            foreach ($url_id_results as $c_code => $result) {
+                $response = $result['value']->getBody()->getContents();
+                preg_match_all('/<meta property="og:url" content="https:\/\/www\.104\.com\.tw\/company\/(.*)">/', $response, $matches);
 
-            foreach ($results as $result) {
-                dd($result);
+                if ( ! isset($matches[1][0])) {
+                    // throw new Exception("找不到公司的網址。");
+                    throw new \Exception();
+                }
+
+                $url_id = $matches[1][0];
+
+                $promises_company[$c_code] = $company_client->getAsync("/company/ajax/content/{$url_id}");
+            }
+
+            $company_results = Promise\settle($promises_company)->wait();
+
+            foreach ($company_results as $code => $result) {
+                dd($result['value']->getBody()->getContents());
             }
         }
-
-        // todo combine company with job data
 
         return $json_data;
     }
