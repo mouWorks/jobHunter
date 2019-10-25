@@ -305,58 +305,108 @@ class Job104 extends JobBase
 
         // 取得 api 網址，查詢資料
         $url = $this->_get_api_url();
-        $json_data = Curl::get_json_data($url);
 
-        $c_codes = array_column($json_data['data'], 'C');
+        // 取得job資料
+        $job_data = Curl::get_json_data($url);
 
-        $companies = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code');
-        $not_exist_companies = [];
+        // job c_code 取得公司資料
+        $c_codes = array_column($job_data['data'], 'C');
+        $exist_company = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code')->toArray();
 
-        foreach ($json_data['data'] as $job) {
-            if (empty($companies[$job['C']])) {
-                $company_data = $this->_convert_company_row_data($job);
-                Company::insert($company_data);
-                $companies[$job['C']] = $company_data;
-                $not_exist_companies[] = $job['C'];
+        $not_exist_company = [];
+        foreach ($job_data['data'] as $job)
+        {
+            if (empty($exist_company[$job['C']])) {
+                $not_exist_company[$job['C']] = $this->_convert_company_row_data($job);
             }
         }
 
-        if (!empty($not_exist_companies)) {
+        if (!empty($not_exist_company))
+        {
+            $c_codes = array_column($not_exist_company, 'c_code');
+            // 非同步取得company url id
+            $url_ids = $this->_get_url_ids($c_codes);
 
-            // 非同步取得company url fake id
-            $url = "https://www.104.com.tw/";
-//
-            $url_id_client = new Client(['base_uri' => $url]);
-            $company_client = new Client(['base_uri' => $url]);
+            $company_info = $this->_get_company_info($url_ids);
 
-            foreach ($not_exist_companies as $c_code) {
-                $fake_id_promises[$c_code] = $url_id_client->getAsync("/jobbank/custjob/index.php?r=cust&j={$c_code}");
-            }
-
-            $url_id_results = Promise\settle($fake_id_promises)->wait();
-
-            foreach ($url_id_results as $c_code => $result) {
-                $response = $result['value']->getBody()->getContents();
-                preg_match_all('/<meta property="og:url" content="https:\/\/www\.104\.com\.tw\/company\/(.*)">/', $response, $matches);
-
-                if ( ! isset($matches[1][0])) {
-                    // throw new Exception("找不到公司的網址。");
-                    throw new \Exception();
-                }
-
-                $url_id = $matches[1][0];
-
-                $promises_company[$c_code] = $company_client->getAsync("/company/ajax/content/{$url_id}");
-            }
-
-            $company_results = Promise\settle($promises_company)->wait();
-
-            foreach ($company_results as $code => $result) {
-                dd($result['value']->getBody()->getContents());
+            // combine公司資訊並寫入資料庫
+            foreach ($not_exist_company as $c_code => $company) {
+                $not_exist_company[$c_code]['empNo'] = $company_info[$c_code]['empNo'];
+                $not_exist_company[$c_code]['capital'] = $company_info[$c_code]['capital'];
+                $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
+                Company::insert($not_exist_company[$c_code]);
             }
         }
 
-        return $json_data;
+        $company = array_merge($exist_company, $not_exist_company);
+
+        dd($job_data);
+
+        foreach ($job_data as $index => $job) {
+            $tmpJob = $this->_convert_job_row_data($job);;
+            dd($tmpJob);
+            $job_data[$index] = $job;
+        }
+
+        return $job_data;
+    }
+
+    /**
+     * 使用c_code取得url_id
+     * @param array $c_codes
+     * @return array
+     */
+    private function _get_url_ids(array $c_codes): array
+    {
+        $url = "https://www.104.com.tw/";
+
+        $url_id_client = new Client(['base_uri' => $url]);
+
+        foreach ($c_codes as $c_code)
+        {
+            $promises[$c_code] = $url_id_client->getAsync("/jobbank/custjob/index.php?r=cust&j={$c_code}");
+        }
+
+        $results = Promise\settle($promises)->wait();
+
+        $url_ids = [];
+
+        foreach ($results as $c_code => $result) {
+            $response = $result['value']->getBody()->getContents();
+
+            preg_match_all('/<meta property="og:url" content="https:\/\/www\.104\.com\.tw\/company\/(.*)">/', $response, $matches);
+
+            if ( ! isset($matches[1][0])) {
+                continue;
+            }
+
+            $url_ids[$c_code] = $matches[1][0];
+        }
+
+        return $url_ids;
+    }
+
+    private function _get_company_info(array $url_ids)
+    {
+        $url = "https://www.104.com.tw/";
+
+        $client = new Client(['base_uri' => $url]);
+
+        foreach ($url_ids as $c_code => $url_id)
+        {
+            $promises[$c_code] = $client->getAsync("/company/ajax/content/{$url_id}");
+        }
+
+        $results = Promise\settle($promises)->wait();
+
+        $company_info = [];
+        foreach ($results as $code => $result) {
+            $tmp_company = json_decode($result['value']->getBody()->getContents(), true);
+            $company_info[$code]['empNo'] = $tmp_company['data']['empNo'];
+            $company_info[$code]['capital'] = $tmp_company['data']['capital'];
+        }
+
+        return $company_info;
     }
 
 }
