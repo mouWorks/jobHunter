@@ -27,29 +27,25 @@ class CrawlerController extends Controller
     {
         // 取得 Company 資料
         $row = Company::get($companyID);
-        if ($row)
-        {
-            echo "<pre>row = " . print_r($row, TRUE). "</pre>";
-            echo Lib::number2capital($row->capital);
 
-            $c_code = $row->c_code;
-
-            // 爬 104 網頁取得資訊
-            $data = Crawler104::get_company($c_code);
-            if ($data)
-            {
-                echo "<pre>data = " . print_r($data, TRUE). "</pre>";
-                Company::where('companyID', $companyID)->update($data);
-            }
-            else
-            {
-                return '[$c_code] Crawler No Response!';
-            }
-        }
-        else
-        {
+        if (!$row){
             return 'No Company Data.';
         }
+
+        echo "<pre>row = " . print_r($row, TRUE). "</pre>";
+        echo Lib::number2capital($row->capital);
+
+        $c_code = $row->c_code;
+
+        // 爬 104 網頁取得資訊
+        $data = Crawler104::get_company($c_code);
+
+        if( ! $data){
+            return '[$c_code] Crawler No Response!';
+        }
+
+        echo "<pre>data = " . print_r($data, TRUE). "</pre>";
+        Company::where('companyID', $companyID)->update($data);
     }
 
     /**
@@ -68,26 +64,24 @@ class CrawlerController extends Controller
 
         // 爬 104 網頁取得資訊
         $data = Crawler104::get_company($c_code);
-        if ($data)
-        {
-            // 更新資料庫
-            Company::where('companyID', $companyID)->update($data);
 
-            // 完成筆數加 1
-            $company_data['null_count']--;
-
-            // 計算完成度
-            $company_data['finish_percent'] = number_format(($company_data['count'] - $company_data['null_count']) / $company_data['count'] * 100, 2);
-
-            // 取得爬蟲資訊
-            $company_data['employees'] = $data['employees'];
-            $company_data['capital']   = Lib::number2capital($data['capital']);
-            $company_data['url']       = $data['url'];
-        }
-        else
-        {
+        if (!$data){
             return 'Crawler No Response!';
         }
+
+        // 更新資料庫
+        Company::where('companyID', $companyID)->update($data);
+
+        // 完成筆數加 1
+        $company_data['null_count']--;
+
+        // 計算完成度
+        $company_data['finish_percent'] = number_format(($company_data['count'] - $company_data['null_count']) / $company_data['count'] * 100, 2);
+
+        // 取得爬蟲資訊
+        $company_data['employees'] = $data['employees'];
+        $company_data['capital']   = Lib::number2capital($data['capital']);
+        $company_data['url']       = $data['url'];
 
         $view_data = $company_data;
 

@@ -114,15 +114,12 @@ class UpdateController extends Controller
         	$json = file_get_contents($json_file);
             $data = json_decode($json, TRUE);
 
-            if ($data)
-            {
-                $conditions = $data;
-                $condition_file = $json_file;
+            if (!$data){
+                exit("JSON 格式壞了！請檢查一下");
             }
-            else 
-            {
-            	exit("JSON 格式壞了！請檢查一下");	
-            }
+
+            $conditions = $data;
+            $condition_file = $json_file;
         }
 
         // 取得分頁

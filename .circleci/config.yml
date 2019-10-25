@@ -1,0 +1,81 @@
+version: 2.1
+
+orbs:
+  slack: circleci/slack@3.4.0
+
+jobs:
+  build:
+    docker:
+      - image: circleci/php:7.1.32-fpm-node
+    working_directory: ~/jobHunter
+    environment:
+      - SOURCE_BRANCH: src
+      - TARGET_BRANCH: master
+      - ZIPFILE_NAME: cc-code.tar.gz
+    steps:
+      - checkout
+#      - add_ssh_keys:
+#          fingerprints:
+#            - "9e:b2:7d:7f:da:69:a4:7f:e6:a8:92:33:76:a1:31:e4" # DigitalOcean Manually created this key
+
+      # Download and cache dependencies
+      # PHP - Composer Packages
+      - restore_cache:
+          keys:
+            # "composer.lock" can be used if it is committed to the repo
+            - v1-dependencies-{{ checksum "composer.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: composer install -n --prefer-dist
+
+      - save_cache:
+          key: v1-dependencies-{{ checksum "composer.json" }}
+          paths:
+            - ./vendor
+
+      # NodeJS - Node Modules
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}
+            - node-v1-
+
+      - run: npm install
+
+      - save_cache:
+          key: node-v1-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+
+      - run:
+          name: Show Current Location
+          command: pwd
+
+      - run:
+          name: Install phpUnit 7.5 phar
+          command: |
+            wget https://phar.phpunit.de/phpunit-7.5.phar
+            chmod +x phpunit-7.5.phar
+            mv phpunit-7.5.phar phpunit
+
+      - run:
+          name: Run Unit Test
+          command: |
+            ./phpunit --exclude-group ignore --testdox
+
+      - slack/status:
+          channel: 'jobhunter-ci'
+          failure_message: "CI build Fail! , Check CircleCI"
+          success_message: "https://jobhunter.manycat.com.tw CI build Finished."
+          include_visit_job_action: true
+          webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
+workflows:
+  version: 2.1
+  build_and_auto_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - 001_Refactor_MySQL
