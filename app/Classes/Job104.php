@@ -401,14 +401,6 @@ class Job104 extends JobBase
 
     public function testAWS()
     {
-//        $credentials = new Credentials('AKIAWDFVARRBQLHPK6GP', 'urwMvY4dg4tx74cCwiZS5qmpye2F+QMx3hg917DT');
-//
-//        $sdk = new Sdk([
-//            'region'   => 'us-west-2',
-//            'version'  => 'latest',
-//            'credentials' => $credentials
-//        ]);
-
         $sdk = app()->make(Sdk::class);
 
         $dynamodb = $sdk->createDynamoDb();
