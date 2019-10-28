@@ -70,6 +70,7 @@ class CrawlerController extends Controller
         }
 
         // 更新資料庫
+        dd($data);
         Company::where('companyID', $companyID)->update($data);
 
         // 完成筆數加 1

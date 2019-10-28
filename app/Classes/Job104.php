@@ -2,6 +2,12 @@
 namespace App\Classes;
 
 use App\Classes\JobBase;
+use App\Domains\AWS\Sdk;
+use App\Library\Lib;
+use Aws\Credentials\Credentials;
+use Aws\DynamoDb\Exception\DynamoDbException;
+use Aws\DynamoDb\Marshaler;
+use Aws\S3\S3Client;
 use GuzzleHttp\Promise;
 use App\Library\Curl;
 use App\Library\Debug;
@@ -21,9 +27,14 @@ class Job104 extends JobBase
      */
     private $_preview_mode = FALSE;
 
+    /** @var Sdk */
+    private $sdk;
+
     public function __construct()
     {
         define('JSON_DIR', __DIR__ . '/../../resources/json/');
+
+        $this->sdk = app()->make(Sdk::class);
     }
 
     /**
@@ -311,6 +322,8 @@ class Job104 extends JobBase
 
         // job c_code 取得公司資料
         $c_codes = array_column($job_data['data'], 'C');
+        $exist_company = $this->_get_companies($c_codes);
+        dd($exist_company);
         $exist_company = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code')->toArray();
 
         $not_exist_company = [];
@@ -321,34 +334,233 @@ class Job104 extends JobBase
             }
         }
 
-        if (!empty($not_exist_company))
-        {
+        if (!empty($not_exist_company)) {
             $c_codes = array_column($not_exist_company, 'c_code');
             // 非同步取得company url id
             $url_ids = $this->_get_url_ids($c_codes);
 
             $company_info = $this->_get_company_info($url_ids);
 
-            // combine公司資訊並寫入資料庫
+            // combine公司資訊並寫入dynamoDB
             foreach ($not_exist_company as $c_code => $company) {
-                $not_exist_company[$c_code]['empNo'] = $company_info[$c_code]['empNo'];
-                $not_exist_company[$c_code]['capital'] = $company_info[$c_code]['capital'];
+                $not_exist_company[$c_code]['employees'] = intval($company_info[$c_code]['empNo']);
+                $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
                 $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
-                Company::insert($not_exist_company[$c_code]);
+                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
             }
         }
 
         $company = array_merge($exist_company, $not_exist_company);
 
-        dd($job_data);
+        dd($company);
 
         foreach ($job_data as $index => $job) {
-            $tmpJob = $this->_convert_job_row_data($job);;
-            dd($tmpJob);
+            $tmpJob = $this->_convert_job_row_data($job);
             $job_data[$index] = $job;
         }
 
         return $job_data;
+    }
+
+    public function _get_companies($c_codes)
+    {
+        $dynamodb = $this->sdk->getDynamoDB();
+
+        $marshaler = new Marshaler();
+
+        $items = [];
+
+        $query = [];
+
+        foreach ($c_codes as $index => $c_code) {
+            $binding_key = ':c_code_' . $index;
+            $items[$binding_key] = $c_code;
+            $query[] = 'c_code = ' . $binding_key;
+        }
+
+//        $items = [":c_code_0" => "453b436c35373f6831333b64393f371a72a2a2a6c426d3f2674j53"];
+
+        $eav = $marshaler->marshalItem($items);
+        dd([$items, $query]);
+
+        $params = [
+            'TableName' => 'companies',
+//            'ProjectionExpression' => '#yr, title, info.genres, info.actors[0]',
+            'KeyConditionExpression' => implode(' and ', $query),
+//            'KeyConditionExpression' => 'c_code = :c_code_0',
+            'ExpressionAttributeValues'=> $eav
+        ];
+
+        echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
+
+        $result = $dynamodb->query($params);
+
+        dd($result);
+
+    }
+
+    public function testAWS()
+    {
+//        $credentials = new Credentials('AKIAWDFVARRBQLHPK6GP', 'urwMvY4dg4tx74cCwiZS5qmpye2F+QMx3hg917DT');
+//
+//        $sdk = new Sdk([
+//            'region'   => 'us-west-2',
+//            'version'  => 'latest',
+//            'credentials' => $credentials
+//        ]);
+
+        $sdk = app()->make(Sdk::class);
+
+        $dynamodb = $sdk->createDynamoDb();
+        $marshaler = new Marshaler();
+
+        $tableName = 'Movies';
+
+        // ##################### search data #####################
+        $eav = $marshaler->marshalItem([
+            ":yyyy" => 2018,
+            ":title" => "就是"
+        ]);
+
+        $params = [
+            'TableName' => $tableName,
+            "KeyConditions" => [
+                'title' => [
+                    "ComparisonOperator" => 'CONTAINS',
+                    'AttributeValueList' => [
+                        ['S' => "Red"]
+                    ],
+                ],
+//                "ComparisonOperator" => ['CONTAINS'],
+//                'title' => [
+//                    'AttributeValueList' => [
+//                        ['S' => "Red"]
+//                    ],
+//                ]
+            ]
+
+//            'KeyConditionExpression' => 'title contains :v_id and ReplyDateTime >= :v_reply_dt',
+//            'ExpressionAttributeValues' =>  [
+//                ':v_id' => ['S' => 'Amazon DynamoDB#DynamoDB Thread 2'],
+//                ':v_reply_dt' => ['S' => $fourteenDaysAgo]
+//            ],
+//            'ProjectionExpression' => 'Id, ReplyDateTime, Message, PostedBy',
+//            'ConsistentRead' => true,
+//            'Limit' => 1
+//            'TableName' => $tableName,
+////            'ProjectionExpression' => '#yr, title, info.genres, info.actors[0]',
+//            'KeyConditionExpression' =>
+//                '#yr = :yyyy and contains(title, :title) ',
+//            'ExpressionAttributeNames'=> [ '#yr' => 'year' ],
+//            'ExpressionAttributeValues'=> $eav
+        ];
+
+        echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
+
+        try {
+            $result = $dynamodb->query($params);
+
+            dd($result);
+
+            echo "Query succeeded.\n";
+
+//            foreach ($result['Items'] as $i) {
+//                $movie = $marshaler->unmarshalItem($i);
+//                print $movie['year'] . ': ' . $movie['title'] . ' ... ';
+//
+//                foreach ($movie['info']['genres'] as $gen) {
+//                    print $gen . ' ';
+//                }
+//
+//                echo ' ... ' . $movie['info']['actors'][0] . "\n";
+//            }
+
+        } catch (DynamoDbException $e) {
+            echo "Unable to query:\n";
+            echo $e->getMessage() . "\n";
+        }
+
+        // ##################### get data #####################
+//        $key = $marshaler->marshalItem([
+//            'year' => 2018,
+//            'title' => '就是title',
+//        ]);
+//
+//        $params = [
+//            'TableName' => $tableName,
+//            'Key' => $key
+//        ];
+//
+//        try {
+//            $result = $dynamodb->getItem($params);
+//            print_r($result["Item"]);
+//
+//        } catch (DynamoDbException $e) {
+//            echo "Unable to get item:\n";
+//            echo $e->getMessage() . "\n";
+//        }
+
+        // ##################### insert data #####################
+//        $params = [
+//            'TableName' => 'Movies',
+//            'Item' => $marshaler->marshalItem([
+//                'year' => 2017,
+//                'title' => '就是title3',
+//            ])
+//        ];
+//
+//        try {
+//            $result = $dynamodb->putItem($params);
+//            echo "Added movie success";
+//        } catch (DynamoDbException $e) {
+//            echo "Unable to add movie:\n";
+//            echo $e->getMessage() . "\n";
+//            return;
+//        }
+
+
+        // ##################### create table #####################
+//        $params = [
+//            'TableName' => 'Movies',
+//            'KeySchema' => [
+//                [
+//                    'AttributeName' => 'year',
+//                    'KeyType' => 'HASH'  //Partition key
+//                ],
+//                [
+//                    'AttributeName' => 'title',
+//                    'KeyType' => 'RANGE'  //Sort key
+//                ]
+//            ],
+//            'AttributeDefinitions' => [
+//                [
+//                    'AttributeName' => 'year',
+//                    'AttributeType' => 'N'
+//                ],
+//                [
+//                    'AttributeName' => 'title',
+//                    'AttributeType' => 'S'
+//                ],
+//
+//            ],
+//            'ProvisionedThroughput' => [
+//                'ReadCapacityUnits' => 10,
+//                'WriteCapacityUnits' => 10
+//            ]
+//        ];
+//
+//        try {
+//            $result = $dynamodb->createTable($params);
+//            echo 'Created table.  Status: ' .
+//                $result['TableDescription']['TableStatus'] ."\n";
+//
+//        } catch (DynamoDbException $e) {
+//            echo "Unable to create table:\n";
+//            echo $e->getMessage() . "\n";
+//        }
+
+        dd(' ============ ');
+
     }
 
     /**
