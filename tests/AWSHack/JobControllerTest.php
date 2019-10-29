@@ -33,8 +33,8 @@ class JobControllerTest extends TestCase
             'kws'  => 'php python',
             'kwop' => 3,
         ];
-//        $result = $job->get_jobs($conditions);
-        $result = $job->testAWS();
+        $result = $job->get_jobs($conditions);
+//        $result = $job->testAWS();
 
         // assert
         dd($result);

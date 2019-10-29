@@ -323,8 +323,9 @@ class Job104 extends JobBase
         // job c_code 取得公司資料
         $c_codes = array_column($job_data['data'], 'C');
         $exist_company = $this->_get_companies($c_codes);
-        dd($exist_company);
-        $exist_company = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code')->toArray();
+//        dd($exist_company);
+//        $exist_company = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code')->toArray();
+        $exist_company = [];
 
         $not_exist_company = [];
         foreach ($job_data['data'] as $job)
@@ -343,14 +344,21 @@ class Job104 extends JobBase
 
             // combine公司資訊並寫入dynamoDB
             foreach ($not_exist_company as $c_code => $company) {
+                if (empty($company_info[$c_code])) {
+                    continue;
+                }
                 $not_exist_company[$c_code]['employees'] = intval($company_info[$c_code]['empNo']);
                 $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
                 $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
-                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
+//                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
             }
         }
 
         $company = array_merge($exist_company, $not_exist_company);
+
+//        dd($company);
+
+        $this->testCloudSearch($company);
 
         dd($company);
 
@@ -399,6 +407,42 @@ class Job104 extends JobBase
 
     }
 
+    public function testCloudSearch($company)
+    {
+        $cloudSearch = $this->sdk->createCloudSearchDomain([
+            'endpoint' => env('AWS_CLOUDSEARCH_END_POINT')
+        ]);
+
+        $documents = [];
+
+        $index = 10;
+
+        foreach ($company as $com) {
+            $documents[] = [
+                'type' => 'add',
+                'id' => $com['c_code'],
+                'fields' => [
+                    'c_code' => $com['c_code'],
+                    'capital' => $com['capital'],
+                    'employees' => $com['employees'],
+                    'name' => $com['name'],
+                    'url' => $com['url'],
+                    'indcat' => $com['indcat'],
+                ],
+            ];
+        }
+
+        try {
+            $cloudSearch->uploadDocuments([
+                'contentType' => 'application/json',
+                'documents' => json_encode($documents),
+            ]);
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+        }
+        dd('success');
+    }
+
     public function testAWS()
     {
 //        $credentials = new Credentials('AKIAWDFVARRBQLHPK6GP', 'urwMvY4dg4tx74cCwiZS5qmpye2F+QMx3hg917DT');
@@ -409,9 +453,10 @@ class Job104 extends JobBase
 //            'credentials' => $credentials
 //        ]);
 
+        /** @var Sdk $sdk */
         $sdk = app()->make(Sdk::class);
 
-        $dynamodb = $sdk->createDynamoDb();
+        $dynamodb = $sdk->getDynamoDB();
         $marshaler = new Marshaler();
 
         $tableName = 'Movies';
@@ -422,43 +467,65 @@ class Job104 extends JobBase
             ":title" => "就是"
         ]);
 
+//        $params = array(
+//            "TableName" => $tableName,
+//            "KeyConditions" => array(
+//                "ComparisonOperator" => 'CONTAINS',
+//                'title' => array(
+//                    'AttributeValueList' => array(
+//                        array(Type::STRING_SET => array("Red"))
+//                    ),
+//                )
+//            )
+//        );
+
         $params = [
             'TableName' => $tableName,
             "KeyConditions" => [
                 'title' => [
                     "ComparisonOperator" => 'CONTAINS',
                     'AttributeValueList' => [
-                        ['S' => "Red"]
+                        ['S' => "zzzzzz"]
                     ],
                 ],
-//                "ComparisonOperator" => ['CONTAINS'],
-//                'title' => [
-//                    'AttributeValueList' => [
-//                        ['S' => "Red"]
-//                    ],
-//                ]
             ]
+        ];
 
-//            'KeyConditionExpression' => 'title contains :v_id and ReplyDateTime >= :v_reply_dt',
-//            'ExpressionAttributeValues' =>  [
-//                ':v_id' => ['S' => 'Amazon DynamoDB#DynamoDB Thread 2'],
-//                ':v_reply_dt' => ['S' => $fourteenDaysAgo]
-//            ],
-//            'ProjectionExpression' => 'Id, ReplyDateTime, Message, PostedBy',
-//            'ConsistentRead' => true,
-//            'Limit' => 1
-//            'TableName' => $tableName,
-////            'ProjectionExpression' => '#yr, title, info.genres, info.actors[0]',
-//            'KeyConditionExpression' =>
-//                '#yr = :yyyy and contains(title, :title) ',
-//            'ExpressionAttributeNames'=> [ '#yr' => 'year' ],
-//            'ExpressionAttributeValues'=> $eav
+        $search = array(
+            'TableName' => 'companies',
+//            'Select' => 'COUNT',
+            'KeyConditions' => array(
+                'c_code' => array(
+                    'ComparisonOperator' => 'EQ',
+                    'AttributeValueList' => array(
+                        array('S' => '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57', 'S' => '3f5149723b3d456e3739416a3f453d208303030754773517119j02')
+                    )
+                )
+            )
+        );
+        $response = $dynamodb->query($search);
+
+        dd($response);
+
+        $eav = $marshaler->marshalJson('
+            {
+                ":start_yr": 1950,
+                ":end_yr": 2018
+            }
+        ');
+
+        $params = [
+            'TableName' => 'Movies',
+            'ProjectionExpression' => '#yr, title',
+            'FilterExpression' => '#yr between :start_yr and :end_yr',
+            'ExpressionAttributeNames'=> [ '#yr' => 'year' ],
+            'ExpressionAttributeValues'=> $eav,
         ];
 
         echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
 
         try {
-            $result = $dynamodb->query($params);
+            $result = $dynamodb->scan($params);
 
             dd($result);
 
@@ -613,6 +680,9 @@ class Job104 extends JobBase
 
         $company_info = [];
         foreach ($results as $code => $result) {
+            if (empty($result['value'])) {
+                continue;
+            }
             $tmp_company = json_decode($result['value']->getBody()->getContents(), true);
             $company_info[$code]['empNo'] = $tmp_company['data']['empNo'];
             $company_info[$code]['capital'] = $tmp_company['data']['capital'];

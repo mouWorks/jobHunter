@@ -3,6 +3,7 @@
 namespace App\Domains\AWS;
 
 use Aws\Credentials\Credentials;
+use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Marshaler;
 
 class Sdk extends \Aws\Sdk
@@ -73,7 +74,7 @@ class Sdk extends \Aws\Sdk
         $this->_dynamoDb->getItem($params);
     }
 
-    public function getDynamoDB()
+    public function getDynamoDB(): DynamoDbClient
     {
         if (is_null($this->_dynamoDb)) {
             $this->_dynamoDb = $this->createDynamoDb();
