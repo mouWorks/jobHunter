@@ -387,7 +387,7 @@ class Job104 extends JobBase
     public function testCloudSearch($company)
     {
         $cloudSearch = $this->sdk->createCloudSearchDomain([
-            'endpoint' => env('AWS_CLOUDSEARCH_END_POINT')
+            'endpoint' => env('AWS_CLOUDSEARCH_ENDPOINT')
         ]);
 
         $documents = [];
