@@ -211,7 +211,7 @@ class Job104 extends JobBase
         Debug::fblog($json_data);
 
         // 取得額外資訊
-        $api_condition_response = '';
+        $api_condition_response = '';app/Classes/Job104.php
         if ($this->_preview_mode)
         {
             $api_condition_response = Curl::get_response(str_replace('&fmt=8', '&fmt=9', $url))['data'];
@@ -445,14 +445,6 @@ class Job104 extends JobBase
 
     public function testAWS()
     {
-//        $credentials = new Credentials('AKIAWDFVARRBQLHPK6GP', 'urwMvY4dg4tx74cCwiZS5qmpye2F+QMx3hg917DT');
-//
-//        $sdk = new Sdk([
-//            'region'   => 'us-west-2',
-//            'version'  => 'latest',
-//            'credentials' => $credentials
-//        ]);
-
         /** @var Sdk $sdk */
         $sdk = app()->make(Sdk::class);
 
