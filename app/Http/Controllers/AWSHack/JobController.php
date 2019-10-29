@@ -24,12 +24,8 @@ class JobController extends Controller
         $job = $this->_create_job($source);
 
         $conditions = [
-            'cat'  => ['2007001006', '2007001004', '2007001008', '2007001012'],
-            'area' => ['6001001000', '6001002000'],
-            'role' => [1, 4],
-            'exp'  => 7,
-            'kws'  => 'php python',
-            'kwop' => 3,
+            'kws'  => $request->get('q'),
+            'page'  => $request->get('page') ?? 1,
         ];
 
         $response = $job->get_jobs($conditions);

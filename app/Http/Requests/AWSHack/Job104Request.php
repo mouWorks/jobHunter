@@ -4,8 +4,9 @@ namespace App\Http\Requests\AWSHack;
 
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
-Class Job104Request extends FormRequest
+Class Job104Request extends Request
 {
     /**
      * @return array
@@ -20,7 +21,7 @@ Class Job104Request extends FormRequest
             'role' => 'nullable|array',
             'role.*' => 'nullable|integer',
             'exp' => 'nullable|integer',
-            'kws' => 'nullable|string',
+            'kws' => 'required|string',
             'kwop' => 'nullable|integer',
         ];
     }

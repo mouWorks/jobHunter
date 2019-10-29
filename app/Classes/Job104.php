@@ -1,13 +1,10 @@
 <?php
 namespace App\Classes;
 
-use App\Classes\JobBase;
 use App\Domains\AWS\Sdk;
 use App\Library\Lib;
-use Aws\Credentials\Credentials;
 use Aws\DynamoDb\Exception\DynamoDbException;
 use Aws\DynamoDb\Marshaler;
-use Aws\S3\S3Client;
 use GuzzleHttp\Promise;
 use App\Library\Curl;
 use App\Library\Debug;
@@ -320,14 +317,18 @@ class Job104 extends JobBase
         // 取得job資料
         $job_data = Curl::get_json_data($url);
 
+        if (is_null($job_data)) {
+            return [];
+        }
+
         // job c_code 取得公司資料
         $c_codes = array_column($job_data['data'], 'C');
         $exist_company = $this->_get_companies($c_codes);
-
         $not_exist_company = [];
+
         foreach ($job_data['data'] as $job)
         {
-            if (empty($exist_company[$job['C']])) {
+            if (!empty($job['C']) && empty($exist_company[$job['C']])) {
                 $not_exist_company[$job['C']] = $this->_convert_company_row_data($job);
             }
         }
@@ -355,10 +356,15 @@ class Job104 extends JobBase
 
         $response_job = [];
 
+        // combine jobs & companies
         foreach ($job_data['data'] as $index => $job) {
             $tmpJob = $this->_convert_job_row_data($job);
             $response_job[$index] = $tmpJob;
-            $response_job[$index]['company'] = $companies[$job['C']] ?? null;
+            if (!empty($job['C'])) {
+                $response_job[$index]['company'] = $companies[$job['C']] ?? null;
+            } else {
+                $response_job[$index]['company'] = null;
+            }
         }
 
         return $response_job;
@@ -366,9 +372,13 @@ class Job104 extends JobBase
 
     public function _get_companies(array $c_codes): array
     {
+        if (empty($c_codes)) {
+            return [];
+        }
         $c_codes = array_unique($c_codes);
         $companies = $this->sdk->dynamoBatchGetItem('companies', 'c_code', 'S', $c_codes);
-        return $companies;
+        $companies = collect($companies)->keyBy('c_code');
+        return $companies->toArray();
     }
 
     public function testCloudSearch($company)
