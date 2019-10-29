@@ -211,7 +211,7 @@ class Job104 extends JobBase
         Debug::fblog($json_data);
 
         // 取得額外資訊
-        $api_condition_response = '';app/Classes/Job104.php
+        $api_condition_response = '';
         if ($this->_preview_mode)
         {
             $api_condition_response = Curl::get_response(str_replace('&fmt=8', '&fmt=9', $url))['data'];
