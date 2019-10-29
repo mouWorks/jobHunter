@@ -303,13 +303,15 @@ class Job104 extends JobBase
         return "<pre>" .  print_r(json_decode($content), TRUE). "</pre>";
     }
 
+    /**
+     * 取得工作 & 公司資訊
+     * @param $conditions
+     * @return array
+     */
     public function get_jobs($conditions)
     {
-        // 設定更新時的查詢條件
-        if ($conditions)
-        {
-            $this->_set_update_condition($conditions);
-        }
+        // 設定查詢條件
+        $this->_set_update_condition($conditions);
 
         // 取得 api 網址，查詢資料
         $url = $this->_get_api_url();
@@ -321,13 +323,14 @@ class Job104 extends JobBase
             return [];
         }
 
-        // job c_code 取得公司資料
+        // c_code 從dynamoDB取得公司資料
         $c_codes = array_column($job_data['data'], 'C');
         $exist_company = $this->_get_companies($c_codes);
         $not_exist_company = [];
 
         foreach ($job_data['data'] as $job)
         {
+            // 取得不存在dynamodb的公司
             if (!empty($job['C']) && empty($exist_company[$job['C']])) {
                 $not_exist_company[$job['C']] = $this->_convert_company_row_data($job);
             }
@@ -415,217 +418,6 @@ class Job104 extends JobBase
             dd($e->getMessage());
         }
         dd('success');
-    }
-
-    public function testAWS()
-    {
-        /** @var Sdk $sdk */
-        $sdk = app()->make(Sdk::class);
-//
-//        $result = $sdk->dynamoBatchGetItem('companies', 'c_code', 'S', [
-//            '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57',
-//            '3c704327386c3e673c423a1d1d1d1d5f2443a363189j99',
-//            '3f5149723b3d456e3739416a3f453d208303030754773517119j02',
-//        ]);
-//
-//        dd($result);
-
-//        $params = [
-//            'TableName' => 'Movies',
-//            'Key' => $key
-//            'Items' => $marshaler->marshalItem([
-//                [
-//                    'c_code' => '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57',
-//                ],
-//                [
-//                    'c_code' => '3c704327386c3e673c423a1d1d1d1d5f2443a363189j99',
-//                ],
-//                [
-//                    'c_code' => '3f5149723b3d456e3739416a3f453d208303030754773517119j02',
-//                ],
-//            ])
-//        ];
-
-
-        /** @var Sdk $sdk */
-//        $sdk = app()->make(Sdk::class);
-//
-//        $dynamodb = $sdk->getDynamoDB();
-//        $marshaler = new Marshaler();
-//
-//        $tableName = 'Movies';
-//
-//        // ##################### search data #####################
-//        $eav = $marshaler->marshalItem([
-//            ":yyyy" => 2018,
-//            ":title" => "就是"
-//        ]);
-//
-////        $params = array(
-////            "TableName" => $tableName,
-////            "KeyConditions" => array(
-////                "ComparisonOperator" => 'CONTAINS',
-////                'title' => array(
-////                    'AttributeValueList' => array(
-////                        array(Type::STRING_SET => array("Red"))
-////                    ),
-////                )
-////            )
-////        );
-//
-//        $params = [
-//            'TableName' => $tableName,
-//            "KeyConditions" => [
-//                'title' => [
-//                    "ComparisonOperator" => 'CONTAINS',
-//                    'AttributeValueList' => [
-//                        ['S' => "zzzzzz"]
-//                    ],
-//                ],
-//            ]
-//        ];
-//
-//        $search = array(
-//            'TableName' => 'companies',
-////            'Select' => 'COUNT',
-//            'KeyConditions' => array(
-//                'c_code' => array(
-//                    'ComparisonOperator' => 'EQ',
-//                    'AttributeValueList' => array(
-//                        array('S' => '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57', 'S' => '3f5149723b3d456e3739416a3f453d208303030754773517119j02')
-//                    )
-//                )
-//            )
-//        );
-//        $response = $dynamodb->query($search);
-//
-//        dd($response);
-//
-//        $eav = $marshaler->marshalJson('
-//            {
-//                ":start_yr": 1950,
-//                ":end_yr": 2018
-//            }
-//        ');
-//
-//        $params = [
-//            'TableName' => 'Movies',
-//            'ProjectionExpression' => '#yr, title',
-//            'FilterExpression' => '#yr between :start_yr and :end_yr',
-//            'ExpressionAttributeNames'=> [ '#yr' => 'year' ],
-//            'ExpressionAttributeValues'=> $eav,
-//        ];
-//
-//        echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
-//
-//        try {
-//            $dynamodb->batchGetItem();
-//            $result = $dynamodb->scan($params);
-//
-//            dd($result);
-//
-//            echo "Query succeeded.\n";
-
-//            foreach ($result['Items'] as $i) {
-//                $movie = $marshaler->unmarshalItem($i);
-//                print $movie['year'] . ': ' . $movie['title'] . ' ... ';
-//
-//                foreach ($movie['info']['genres'] as $gen) {
-//                    print $gen . ' ';
-//                }
-//
-//                echo ' ... ' . $movie['info']['actors'][0] . "\n";
-//            }
-
-//        } catch (DynamoDbException $e) {
-//            echo "Unable to query:\n";
-//            echo $e->getMessage() . "\n";
-//        }
-
-        // ##################### get data #####################
-        $tableName = 'Movies';
-        $marshaler = new Marshaler();
-
-        $key = $marshaler->marshalItem([
-            'year' => 2018,
-            'title' => '就是title',
-        ]);
-
-        $params = [
-            'TableName' => $tableName,
-            'Key' => $key
-        ];
-
-        try {
-            $result = $sdk->getDynamoDB()->getItem($params);
-            dd($result["Item"]);
-
-        } catch (DynamoDbException $e) {
-            echo "Unable to get item:\n";
-            echo $e->getMessage() . "\n";
-        }
-
-        // ##################### insert data #####################
-//        $params = [
-//            'TableName' => 'Movies',
-//            'Item' => $marshaler->marshalItem([
-//                'year' => 2017,
-//                'title' => '就是title3',
-//            ])
-//        ];
-//
-//        try {
-//            $result = $dynamodb->putItem($params);
-//            echo "Added movie success";
-//        } catch (DynamoDbException $e) {
-//            echo "Unable to add movie:\n";
-//            echo $e->getMessage() . "\n";
-//            return;
-//        }
-
-
-        // ##################### create table #####################
-//        $params = [
-//            'TableName' => 'Movies',
-//            'KeySchema' => [
-//                [
-//                    'AttributeName' => 'year',
-//                    'KeyType' => 'HASH'  //Partition key
-//                ],
-//                [
-//                    'AttributeName' => 'title',
-//                    'KeyType' => 'RANGE'  //Sort key
-//                ]
-//            ],
-//            'AttributeDefinitions' => [
-//                [
-//                    'AttributeName' => 'year',
-//                    'AttributeType' => 'N'
-//                ],
-//                [
-//                    'AttributeName' => 'title',
-//                    'AttributeType' => 'S'
-//                ],
-//
-//            ],
-//            'ProvisionedThroughput' => [
-//                'ReadCapacityUnits' => 10,
-//                'WriteCapacityUnits' => 10
-//            ]
-//        ];
-//
-//        try {
-//            $result = $dynamodb->createTable($params);
-//            echo 'Created table.  Status: ' .
-//                $result['TableDescription']['TableStatus'] ."\n";
-//
-//        } catch (DynamoDbException $e) {
-//            echo "Unable to create table:\n";
-//            echo $e->getMessage() . "\n";
-//        }
-
-        dd(' ============ ');
-
     }
 
     /**

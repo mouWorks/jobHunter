@@ -3,7 +3,6 @@
 namespace App\Http\Requests\AWSHack;
 
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 
 Class Job104Request extends Request
