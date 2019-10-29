@@ -323,9 +323,6 @@ class Job104 extends JobBase
         // job c_code 取得公司資料
         $c_codes = array_column($job_data['data'], 'C');
         $exist_company = $this->_get_companies($c_codes);
-//        dd($exist_company);
-//        $exist_company = app()->make(Company::class)->whereIn('c_code', $c_codes)->get()->keyBy('c_code')->toArray();
-        $exist_company = [];
 
         $not_exist_company = [];
         foreach ($job_data['data'] as $job)
@@ -350,61 +347,28 @@ class Job104 extends JobBase
                 $not_exist_company[$c_code]['employees'] = intval($company_info[$c_code]['empNo']);
                 $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
                 $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
-//                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
+                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
             }
         }
 
-        $company = array_merge($exist_company, $not_exist_company);
+        $companies = array_merge($exist_company, $not_exist_company);
 
-//        dd($company);
+        $response_job = [];
 
-        $this->testCloudSearch($company);
-
-        dd($company);
-
-        foreach ($job_data as $index => $job) {
+        foreach ($job_data['data'] as $index => $job) {
             $tmpJob = $this->_convert_job_row_data($job);
-            $job_data[$index] = $job;
+            $response_job[$index] = $tmpJob;
+            $response_job[$index]['company'] = $companies[$job['C']] ?? null;
         }
 
-        return $job_data;
+        return $response_job;
     }
 
-    public function _get_companies($c_codes)
+    public function _get_companies(array $c_codes): array
     {
-        $dynamodb = $this->sdk->getDynamoDB();
-
-        $marshaler = new Marshaler();
-
-        $items = [];
-
-        $query = [];
-
-        foreach ($c_codes as $index => $c_code) {
-            $binding_key = ':c_code_' . $index;
-            $items[$binding_key] = $c_code;
-            $query[] = 'c_code = ' . $binding_key;
-        }
-
-//        $items = [":c_code_0" => "453b436c35373f6831333b64393f371a72a2a2a6c426d3f2674j53"];
-
-        $eav = $marshaler->marshalItem($items);
-        dd([$items, $query]);
-
-        $params = [
-            'TableName' => 'companies',
-//            'ProjectionExpression' => '#yr, title, info.genres, info.actors[0]',
-            'KeyConditionExpression' => implode(' and ', $query),
-//            'KeyConditionExpression' => 'c_code = :c_code_0',
-            'ExpressionAttributeValues'=> $eav
-        ];
-
-        echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
-
-        $result = $dynamodb->query($params);
-
-        dd($result);
-
+        $c_codes = array_unique($c_codes);
+        $companies = $this->sdk->dynamoBatchGetItem('companies', 'c_code', 'S', $c_codes);
+        return $companies;
     }
 
     public function testCloudSearch($company)
@@ -447,81 +411,110 @@ class Job104 extends JobBase
     {
         /** @var Sdk $sdk */
         $sdk = app()->make(Sdk::class);
+//
+//        $result = $sdk->dynamoBatchGetItem('companies', 'c_code', 'S', [
+//            '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57',
+//            '3c704327386c3e673c423a1d1d1d1d5f2443a363189j99',
+//            '3f5149723b3d456e3739416a3f453d208303030754773517119j02',
+//        ]);
+//
+//        dd($result);
 
-        $dynamodb = $sdk->getDynamoDB();
-        $marshaler = new Marshaler();
+//        $params = [
+//            'TableName' => 'Movies',
+//            'Key' => $key
+//            'Items' => $marshaler->marshalItem([
+//                [
+//                    'c_code' => '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57',
+//                ],
+//                [
+//                    'c_code' => '3c704327386c3e673c423a1d1d1d1d5f2443a363189j99',
+//                ],
+//                [
+//                    'c_code' => '3f5149723b3d456e3739416a3f453d208303030754773517119j02',
+//                ],
+//            ])
+//        ];
 
-        $tableName = 'Movies';
 
-        // ##################### search data #####################
-        $eav = $marshaler->marshalItem([
-            ":yyyy" => 2018,
-            ":title" => "就是"
-        ]);
-
-//        $params = array(
-//            "TableName" => $tableName,
-//            "KeyConditions" => array(
-//                "ComparisonOperator" => 'CONTAINS',
-//                'title' => array(
+        /** @var Sdk $sdk */
+//        $sdk = app()->make(Sdk::class);
+//
+//        $dynamodb = $sdk->getDynamoDB();
+//        $marshaler = new Marshaler();
+//
+//        $tableName = 'Movies';
+//
+//        // ##################### search data #####################
+//        $eav = $marshaler->marshalItem([
+//            ":yyyy" => 2018,
+//            ":title" => "就是"
+//        ]);
+//
+////        $params = array(
+////            "TableName" => $tableName,
+////            "KeyConditions" => array(
+////                "ComparisonOperator" => 'CONTAINS',
+////                'title' => array(
+////                    'AttributeValueList' => array(
+////                        array(Type::STRING_SET => array("Red"))
+////                    ),
+////                )
+////            )
+////        );
+//
+//        $params = [
+//            'TableName' => $tableName,
+//            "KeyConditions" => [
+//                'title' => [
+//                    "ComparisonOperator" => 'CONTAINS',
+//                    'AttributeValueList' => [
+//                        ['S' => "zzzzzz"]
+//                    ],
+//                ],
+//            ]
+//        ];
+//
+//        $search = array(
+//            'TableName' => 'companies',
+////            'Select' => 'COUNT',
+//            'KeyConditions' => array(
+//                'c_code' => array(
+//                    'ComparisonOperator' => 'EQ',
 //                    'AttributeValueList' => array(
-//                        array(Type::STRING_SET => array("Red"))
-//                    ),
+//                        array('S' => '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57', 'S' => '3f5149723b3d456e3739416a3f453d208303030754773517119j02')
+//                    )
 //                )
 //            )
 //        );
-
-        $params = [
-            'TableName' => $tableName,
-            "KeyConditions" => [
-                'title' => [
-                    "ComparisonOperator" => 'CONTAINS',
-                    'AttributeValueList' => [
-                        ['S' => "zzzzzz"]
-                    ],
-                ],
-            ]
-        ];
-
-        $search = array(
-            'TableName' => 'companies',
-//            'Select' => 'COUNT',
-            'KeyConditions' => array(
-                'c_code' => array(
-                    'ComparisonOperator' => 'EQ',
-                    'AttributeValueList' => array(
-                        array('S' => '394b436c35373f6831333b64393f371a72a2a2a2a41373f2674j57', 'S' => '3f5149723b3d456e3739416a3f453d208303030754773517119j02')
-                    )
-                )
-            )
-        );
-        $response = $dynamodb->query($search);
-
-        dd($response);
-
-        $eav = $marshaler->marshalJson('
-            {
-                ":start_yr": 1950,
-                ":end_yr": 2018
-            }
-        ');
-
-        $params = [
-            'TableName' => 'Movies',
-            'ProjectionExpression' => '#yr, title',
-            'FilterExpression' => '#yr between :start_yr and :end_yr',
-            'ExpressionAttributeNames'=> [ '#yr' => 'year' ],
-            'ExpressionAttributeValues'=> $eav,
-        ];
-
-        echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
-
-        try {
-            $result = $dynamodb->scan($params);
-
-            dd($result);
-
-            echo "Query succeeded.\n";
+//        $response = $dynamodb->query($search);
+//
+//        dd($response);
+//
+//        $eav = $marshaler->marshalJson('
+//            {
+//                ":start_yr": 1950,
+//                ":end_yr": 2018
+//            }
+//        ');
+//
+//        $params = [
+//            'TableName' => 'Movies',
+//            'ProjectionExpression' => '#yr, title',
+//            'FilterExpression' => '#yr between :start_yr and :end_yr',
+//            'ExpressionAttributeNames'=> [ '#yr' => 'year' ],
+//            'ExpressionAttributeValues'=> $eav,
+//        ];
+//
+//        echo "Querying for movies from 1992 - titles A-L, with genres and lead actor\n";
+//
+//        try {
+//            $dynamodb->batchGetItem();
+//            $result = $dynamodb->scan($params);
+//
+//            dd($result);
+//
+//            echo "Query succeeded.\n";
 
 //            foreach ($result['Items'] as $i) {
 //                $movie = $marshaler->unmarshalItem($i);
@@ -534,30 +527,33 @@ class Job104 extends JobBase
 //                echo ' ... ' . $movie['info']['actors'][0] . "\n";
 //            }
 
-        } catch (DynamoDbException $e) {
-            echo "Unable to query:\n";
-            echo $e->getMessage() . "\n";
-        }
-
-        // ##################### get data #####################
-//        $key = $marshaler->marshalItem([
-//            'year' => 2018,
-//            'title' => '就是title',
-//        ]);
-//
-//        $params = [
-//            'TableName' => $tableName,
-//            'Key' => $key
-//        ];
-//
-//        try {
-//            $result = $dynamodb->getItem($params);
-//            print_r($result["Item"]);
-//
 //        } catch (DynamoDbException $e) {
-//            echo "Unable to get item:\n";
+//            echo "Unable to query:\n";
 //            echo $e->getMessage() . "\n";
 //        }
+
+        // ##################### get data #####################
+        $tableName = 'Movies';
+        $marshaler = new Marshaler();
+
+        $key = $marshaler->marshalItem([
+            'year' => 2018,
+            'title' => '就是title',
+        ]);
+
+        $params = [
+            'TableName' => $tableName,
+            'Key' => $key
+        ];
+
+        try {
+            $result = $sdk->getDynamoDB()->getItem($params);
+            dd($result["Item"]);
+
+        } catch (DynamoDbException $e) {
+            echo "Unable to get item:\n";
+            echo $e->getMessage() . "\n";
+        }
 
         // ##################### insert data #####################
 //        $params = [

@@ -38,10 +38,6 @@ class Sdk extends \Aws\Sdk
      */
     public function dynamoPutItem(string $tableName, array $data)
     {
-        if (is_null($this->_dynamoDb)) {
-            $this->_dynamoDb = $this->createDynamoDb();
-        }
-
         $data = array_filter($data);
 
         $marshaler = new Marshaler();
@@ -52,15 +48,11 @@ class Sdk extends \Aws\Sdk
             'Item' => $item
         ];
 
-        $this->_dynamoDb->putItem($params);
+        $this->getDynamoDB()->putItem($params);
     }
 
     public function dynamoGetItem(string $tableName, array $keys)
     {
-        if (is_null($this->_dynamoDb)) {
-            $this->_dynamoDb = $this->createDynamoDb();
-        }
-
         $keys = array_filter($keys);
 
         $marshaler = new Marshaler();
@@ -71,7 +63,42 @@ class Sdk extends \Aws\Sdk
             'Key' => $item
         ];
 
-        $this->_dynamoDb->getItem($params);
+        $this->getDynamoDB()->getItem($params);
+    }
+
+    public function dynamoBatchGetItem(string $table, string $key, string $type, array $values)
+    {
+        $keys = [];
+
+        foreach ($values as $value) {
+            $keys[] = [
+                $key => [
+                    $type => $value
+                ]
+            ];
+        }
+
+        $result = $this->getDynamoDB()->batchGetItem([
+            'RequestItems' => [
+                $table => [
+                    'Keys' => $keys
+                ]
+            ]
+        ]);
+
+        $response = $result['Responses'][$table];
+
+        $data = [];
+
+        foreach ($response as $document) {
+            $tmpDocument = [];
+            foreach ($document as $key => $value) {
+                $tmpDocument[$key] = end($value);
+            }
+            $data[] = $tmpDocument;
+        }
+
+        return $data;
     }
 
     public function getDynamoDB(): DynamoDbClient
