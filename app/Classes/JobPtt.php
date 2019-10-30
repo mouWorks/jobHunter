@@ -27,7 +27,7 @@ class JobPtt extends JobBase
     private $_ptt_url ='https://www.ptt.cc/bbs/Soft_Job/';
     private $_serch_url ='https://www.ptt.cc/bbs/Soft_Job/search?q=[徵才]';
 
-    private $_ptt_list_url = [];
+    private $_ptt_article_ids = [];
 
     private $_content = "";
 
@@ -45,7 +45,6 @@ class JobPtt extends JobBase
     	{
     		//有頁數後開始往後抓
     		$this->crawler_prev_job();
-            dd($this->_ptt_list_url);
 
     		//開始抓單頁的資料
     		$this->crawler_job_page();
@@ -84,8 +83,10 @@ class JobPtt extends JobBase
      */
     protected function crawler_prev_job()
     {
+        $limit = $this->_limit;
+        $limit = 2;
         // crawler_first_page已爬第一頁,因此從第二頁開始爬
-    	for ($page = 2; $page <= $this->_limit; $page++)
+    	for ($page = 2; $page <= $limit; $page++)
     	{
 	    	$url_page = '&page=' . $page;
 	    	$url      = $this->_serch_url . $url_page;
@@ -107,13 +108,14 @@ class JobPtt extends JobBase
 
     protected function crawler_job_page()
     {
-    	if (count($this->_ptt_list_url) == 0 )
+    	if (count($this->_ptt_article_ids) == 0 )
     	{
     		return FALSE;
     	}
 
-    	foreach ($this->_ptt_list_url as $num =>  $url)
+    	foreach ($this->_ptt_article_ids as $article_id)
     	{
+            $url = $this->_ptt_url . $article_id . '.html';
     		$result = Curl::get_response($url);
 
     		if (!$result['status'])
@@ -125,6 +127,7 @@ class JobPtt extends JobBase
     		$content = $result['data'];
 
     		//整理格式後寫到 DB
+            $job_data['id'] = $article_id;
     		$job_data['title']        = $this->_find_job_title($content);
 
     		if (NULL == $job_data['title'])
@@ -132,28 +135,28 @@ class JobPtt extends JobBase
     			echo "該筆抓不到 title " . $url;
     			continue;
     		}
-    		$company_data['name']   = $this->_find_company_name($content);
-    		$company_data['c_code'] = $this->_gen_hash_code($company_data['name']);
+//    		$company_data['name']   = $this->_find_company_name($content);
+//    		$company_data['c_code'] = $this->_gen_hash_code($company_data['name']);
 
-    		$companyID = Company::insert($company_data);
+//    		$companyID = Company::insert($company_data);
 
-    		if ($companyID)
-    		{
-                $job_data['description']  = $this->_find_job_description($content);
-	     		$job_data['source_url']   = $url;
-				$job_data['source']       = 'ptt';
-				$job_data['j_code']       = $this->_gen_hash_code($job_data['title']);
-				$job_data['companyID']    = $companyID;
-				$job_data['appear_date']    = $this->_find_postdate($content);
+            $job_data['description']  = $this->_find_job_description($content);
+            $job_data['source_url']   = $url;
+            $job_data['source']       = 'ptt';
+            $job_data['j_code']       = $this->_gen_hash_code($job_data['title']);
+//            $job_data['companyID']    = $companyID;
+            $job_data['appear_date']    = $this->_find_postdate($content);
 
-                $salary = $this->_find_salary($job_data['description']);
+            $salary = $this->_find_salary($job_data['description']);
 
-                if (!empty($salary)) {
-                    $job_data['sal_month_low'] = $salary[0];
-                    $job_data['sal_month_high'] = $salary[1];
-                }
-				$jobID = Job::insert($job_data);
-    		}
+            if (!empty($salary)) {
+                $job_data['sal_month_low'] = $salary[0];
+                $job_data['sal_month_high'] = $salary[1];
+            }
+            dd($job_data);
+            // todo 寫進dynamoDB
+            // todo 寫進CloudSearch
+            $jobID = Job::insert($job_data);
 
     	}
 
@@ -215,12 +218,8 @@ class JobPtt extends JobBase
     	}
 
     	if (!empty($match[1])) {
-            $urls = collect($match[1])->map(function($url){
-                return $this->_ptt_url . $url . '.html';
-            });
+            $this->_ptt_article_ids = array_merge($this->_ptt_article_ids, $match[1]);
         }
-
-    	$this->_ptt_list_url = array_merge($this->_ptt_list_url, $urls->toArray());
     }
 
     private function _find_list_page_btn($content = "")
@@ -280,9 +279,9 @@ class JobPtt extends JobBase
 
     private function _find_job_description($content)
     {
-
     	$content = preg_replace('/\s(?=\s)/', '', $content);
-    	$content = preg_replace('/[\n\r\t]/', ' ', $content);
+    	$content = preg_replace('/[\n\r\t]/', '</br>', $content);
+//        $content = nl2br($content);
 
     	$patten = '/<span class=\"article\-meta-value\">.*<\/span><\/div>(.*)\<span\ class\=\"f2\"\>.*發信站.*/';
 
@@ -292,7 +291,7 @@ class JobPtt extends JobBase
     		return NULL;
     	}
 
-    	$descript = strip_tags($match[1]);
+    	$descript = strip_tags($match[1], '<br>');
 
     	return $descript;
     }
