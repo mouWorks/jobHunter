@@ -45,6 +45,7 @@ class JobPtt extends JobBase
     	{
     		//有頁數後開始往後抓
     		$this->crawler_prev_job();
+            dd($this->_ptt_list_url);
 
     		//開始抓單頁的資料
     		$this->crawler_job_page();
@@ -83,23 +84,24 @@ class JobPtt extends JobBase
      */
     protected function crawler_prev_job()
     {
-    	$limit = $this->_total_page - $this->_limit;
-
-    	for ($page = $this->_total_page; $page >= $limit; $page--)
+        // crawler_first_page已爬第一頁,因此從第二頁開始爬
+    	for ($page = 2; $page <= $this->_limit; $page++)
     	{
-	    	$url_page = '&page=' . ((0) ? "" : $page);
+	    	$url_page = '&page=' . $page;
 	    	$url      = $this->_serch_url . $url_page;
 
 	    	$result = Curl::get_response($url);
 
 	    	if (!$result['status'])
 	    	{
-	    		exit("今天不順，抓不到資料");
+	    		exit("今天不順，抓不到資料xxx");
 	    	}
 
 	    	$this->_content = $result['data'];
 
 	    	$this->_find_list_title($this->_content);
+
+	    	usleep(100);
     	}
     }
 
@@ -207,12 +209,18 @@ class JobPtt extends JobBase
     {
     	$patten = '/.*\<a\ href="\/bbs\/Soft_Job\/(.*).html\"\>\[徵才\]\ (.*)\<\/a\>.*/';
 
-    	if (!preg_match($patten, $content, $match))
+    	if (!preg_match_all($patten, $content, $match))
     	{
     		return FALSE;
     	}
 
-    	$this->_ptt_list_url[] = $this->_ptt_url . $match[1] . '.html';
+    	if (!empty($match[1])) {
+            $urls = collect($match[1])->map(function($url){
+                return $this->_ptt_url . $url . '.html';
+            });
+        }
+
+    	$this->_ptt_list_url = array_merge($this->_ptt_list_url, $urls->toArray());
     }
 
     private function _find_list_page_btn($content = "")
