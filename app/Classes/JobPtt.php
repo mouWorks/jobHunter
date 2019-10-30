@@ -24,8 +24,8 @@ class JobPtt extends JobBase
      * 104 API 網址
      * @var string
      */
-    private $_ptt_url ='https://www.ptt.cc/bbs/Soft_Job/search?q=%5B徵才%5D';
-//    private $_ptt_url ='https://www.ptt.cc/bbs/Soft_Job/';
+    private $_ptt_url ='https://www.ptt.cc/bbs/Soft_Job/';
+    private $_serch_url ='https://www.ptt.cc/bbs/Soft_Job/search?q=[徵才]';
 
     private $_ptt_list_url = [];
 
@@ -60,7 +60,7 @@ class JobPtt extends JobBase
      */
     protected function crawler_first_page()
     {
-        $result = Curl::get_response($this->_ptt_url);
+        $result = Curl::get_response($this->_serch_url);
 
     	if (!$result['status'])
     	{
@@ -87,8 +87,8 @@ class JobPtt extends JobBase
 
     	for ($page = $this->_total_page; $page >= $limit; $page--)
     	{
-	    	$url_page = 'page=' . ((0) ? "" : $page) . '.html';
-	    	$url      = $this->_ptt_url . $url_page;
+	    	$url_page = '&page=' . ((0) ? "" : $page);
+	    	$url      = $this->_serch_url . $url_page;
 
 	    	$result = Curl::get_response($url);
 
