@@ -87,7 +87,7 @@ class JobPtt extends JobBase
 
     	for ($page = $this->_total_page; $page >= $limit; $page--)
     	{
-	    	$url_page = 'index' . ((0) ? "" : $page) . '.html';
+	    	$url_page = 'page=' . ((0) ? "" : $page) . '.html';
 	    	$url      = $this->_ptt_url . $url_page;
 
 	    	$result = Curl::get_response($url);
@@ -218,7 +218,7 @@ class JobPtt extends JobBase
     private function _find_list_page_btn($content = "")
     {
 
-    	$patten = '/.*href=\"\/bbs\/Soft_Job\/index(\d+).html">\&lsaquo\; 上頁<\/a>.*/';
+    	$patten = '/.*href=\"\/bbs\/Soft_Job\/search\?page\=(\d+)&amp;q=%5B%E5%BE%B5%E6%89%8D%5D\"\>最舊<\/a>.*/';
 
     	if (!preg_match($patten, $content, $match))
     	{
