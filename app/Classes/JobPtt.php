@@ -82,9 +82,14 @@ class JobPtt extends JobBase
         }
 
         // 取得ids job
-        $this->get_job_info($all_ids);
+        $job_data = $this->get_job_data($all_ids);
 
-        // todo 寫進dynamodb & CloudSearch
+        // 寫進dynamodb & CloudSearch
+        foreach ($job_data as $job) {
+            $this->sdk->dynamoPutItem('PttJobs', $job);
+        }
+
+        $this->sdk->CloudSearchPutJob($job_data, 'ptt');
     }
 
     private function get_ids_by_page(int $page = 1)
@@ -203,7 +208,7 @@ class JobPtt extends JobBase
 
     		//整理格式後寫到 DB
             $job_data['id'] = $article_id;
-    		$job_data['title']        = $this->_find_job_title($content);
+    		$job_data['title'] = $this->_find_job_title($content);
 
     		if (NULL == $job_data['title'])
     		{
@@ -251,6 +256,9 @@ class JobPtt extends JobBase
     	$patten[] = '/(.*有限公司).*/';
     	$patten[] = '/(.*顧問公司).*/';
     	$patten[] = '/.*公司名稱：(.*)/';
+    	$patten[] = '/.*公司名稱，統編\(中華民國以外註冊可免填\)：(.*)/';
+    	$patten[] = '/.*[公司名稱]\：(.*)/';
+        $content = str_replace(' ', '', $content);
 
     	$content = strip_tags($content);
 
@@ -410,8 +418,10 @@ class JobPtt extends JobBase
         return null;
     }
 
-    private function get_job_info(array $ids)
+    private function get_job_data(array $ids)
     {
+        $job_data = [];
+
         foreach ($ids as $article_id) {
             $url = $this->_ptt_url . $article_id . '.html';
             $result = Curl::get_response($url);
@@ -424,40 +434,38 @@ class JobPtt extends JobBase
             $content = $result['data'];
 
             //整理格式後寫到 DB
-            $job_data['id'] = $article_id;
-            $job_data['title']        = $this->_find_job_title($content);
+            $job['id'] = $article_id;
+            $job['title']        = $this->_find_job_title($content);
 
-            if (NULL == $job_data['title'])
+            if (NULL == $job['title'])
             {
                 echo "該筆抓不到 title " . $url;
                 continue;
             }
 
-            $job_data['company_name']   = $this->_find_company_name($content);
-            $job_data['description']  = $this->_find_job_description($content);
-            $job_data['source_url']   = $url;
-            $job_data['source']       = 'ptt';
-            $job_data['j_code']       = $this->_gen_hash_code($job_data['title']);
-            $job_data['appear_date']    = $this->_find_postdate($content);
+            $region = $this->get_region($content);
 
-            $salary = $this->_find_salary($job_data['description']);
+            $job['company_name']   = $this->_find_company_name($content);
+            $job['region']   = $region['city'] . $region['area'];
+            $job['description']  = $this->_find_job_description($content);
+            $job['source_url']   = $url;
+            $job['source']       = 'ptt';
+            $job['j_code']       = $this->_gen_hash_code($job['title']);
+            $job['appear_date']    = $this->_find_postdate($content);
+
+            $salary = $this->_find_salary($job['description']);
 
             if (!empty($salary)) {
-                $job_data['sal_month_low'] = (int) $salary[0];
-                $job_data['sal_month_high'] = (int) $salary[1];
+                $job['min_salary'] = (int) $salary[0];
+                $job['max_salary'] = (int) $salary[1];
             } else {
-                $job_data['sal_month_low'] = 0;
-                $job_data['sal_month_high'] = 0;
+                $job['min_salary'] = 0;
+                $job['max_salary'] = 0;
             }
 
-            $data[] = $job_data;
-            // todo 寫進dynamoDB
-            // todo 寫進CloudSearch
-//            $jobID = Job::insert($job_data);
-            $this->sdk->dynamoPutItem('PttJobs', $job_data);
-
+            $job_data[] = $job;
         }
 
-        dd($data);
+        return $job_data;
     }
 }

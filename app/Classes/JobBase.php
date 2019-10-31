@@ -38,4 +38,28 @@ abstract class JobBase
     {
         return $this->_allow_search_field;
     }
+
+    public function get_region($address)
+    {
+        preg_match('/(.*?(市|自治州|地區|區劃|縣))/', $address, $matches);
+        if (count($matches) > 1) {
+            $city = $matches[count($matches) - 2];
+            $address = str_replace($city, '', $address);
+        }
+        preg_match('/(.*?(區|縣|鎮|鄉|街道))/', $address, $matches);
+        if (count($matches) > 1) {
+            $area = $matches[count($matches) - 2];
+            $address = str_replace($area, '', $address);
+        }
+        return [
+            'city' => isset($city) ? $city : '',
+            'area' => isset($area) ? $area : '',
+        ];
+    }
+
+    public function get_time()
+    {
+        list($usec, $sec) = explode(" ", microtime());
+        return floor($sec . ($usec * 1000));
+    }
 }

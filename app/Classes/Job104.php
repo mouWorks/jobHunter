@@ -351,6 +351,7 @@ class Job104 extends JobBase
                 $not_exist_company[$c_code]['employees'] = intval($company_info[$c_code]['empNo']);
                 $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
                 $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
+                $not_exist_company[$c_code]['img'] = $company_info[$c_code]['img'];
                 $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
             }
         }
@@ -476,6 +477,14 @@ class Job104 extends JobBase
             $tmp_company = json_decode($result['value']->getBody()->getContents(), true);
             $company_info[$code]['empNo'] = $tmp_company['data']['empNo'];
             $company_info[$code]['capital'] = $tmp_company['data']['capital'];
+            $company_info[$code]['img'] = $tmp_company['data']['corpImage1'];
+            if (!empty($tmp_company['data']['corpImage1'])) {
+                $company_info[$code]['img'] = $tmp_company['data']['corpImage1'];
+            } elseif (!empty($tmp_company['data']['corpImage2'])) {
+                $company_info[$code]['img'] = $tmp_company['data']['corpImage2'];
+            } elseif (!empty($tmp_company['data']['corpImage3'])) {
+                $company_info[$code]['img'] = $tmp_company['data']['corpImage3'];
+            }
         }
 
         return $company_info;
