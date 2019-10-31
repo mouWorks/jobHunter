@@ -55,7 +55,7 @@ class JobPtt extends JobBase
 
         $stop_scan = false;
 
-        $max_limit = 1;
+        $max_limit = 10;
 
         while(!$stop_scan)
         {

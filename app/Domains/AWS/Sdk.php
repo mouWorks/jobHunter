@@ -127,7 +127,7 @@ class Sdk extends \Aws\Sdk
     private function _parse_ptt(array $job)
     {
         // 地區,薪資min,薪資max,工作職稱,公司名稱,公司圖片,工作描述,url,source,time
-        $description = empty($job['description']) ? '' : substr($job['description'], 1, 10);
+        $description = empty($job['description']) ? '' : strip_tags(substr($job['description'], 1, 200));
         return [
             'id' => $job['id'],
             'region' => $job['region'] ?? '',
@@ -160,23 +160,25 @@ class Sdk extends \Aws\Sdk
 
         $documents = [];
 
-        foreach ($job_data as $job) {
+        foreach ($job_data as $index => $job) {
             $job = $this->{'_parse_' . $source}($job);
             $job['create_time'] = $time++;
-            $documents[] = [
+            $documents = [
                 'type' => 'add',
                 'id' => $job['id'],
                 'fields' => $job,
             ];
-        }
 
-        try {
-            $this->getCloudSearch()->uploadDocuments([
-                'contentType' => 'application/json',
-                'documents' => json_encode([$documents[0]]),
-            ]);
-        } catch (\Exception $e) {
-            dd($e->getMessage());
+            try {
+                var_dump($index);
+                $this->getCloudSearch()->uploadDocuments([
+                    'contentType' => 'application/json',
+                    'documents' => json_encode([$documents]),
+                ]);
+            } catch (\Exception $e) {
+//                dd($e->getMessage());
+                var_dump($e->getMessage());
+            }
         }
     }
 }
