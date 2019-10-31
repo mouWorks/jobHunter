@@ -127,16 +127,17 @@ class Sdk extends \Aws\Sdk
     private function _parse_ptt(array $job)
     {
         // 地區,薪資min,薪資max,工作職稱,公司名稱,公司圖片,工作描述,url,source,time
+        $description = empty($job['description']) ? '' : substr($job['description'], 1, 10);
         return [
             'id' => $job['id'],
-            'region' => $job['region'],
-            'max_salary' => $job['max_salary'],
-            'min_salary' => $job['min_salary'],
+            'region' => $job['region'] ?? '',
+            'max_salary' => $job['max_salary'] ?? '',
+            'min_salary' => $job['min_salary'] ?? '',
             'job_title' => $job['title'],
-            'company_name' => $job['company_name'],
+            'company_name' => $job['company_name'] ?? '',
             'company_img' => '',
-            'description' => substr($job['description'], 1, 200),
-            'url' => $job['source_url'],
+            'description' => $description,
+            'url' => $job['source_url'] ?? '',
             'source' => 'ptt',
             'time' => '',
         ];
@@ -172,7 +173,7 @@ class Sdk extends \Aws\Sdk
         try {
             $this->getCloudSearch()->uploadDocuments([
                 'contentType' => 'application/json',
-                'documents' => json_encode($documents),
+                'documents' => json_encode([$documents[0]]),
             ]);
         } catch (\Exception $e) {
             dd($e->getMessage());
