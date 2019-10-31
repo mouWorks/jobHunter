@@ -45,15 +45,25 @@ abstract class JobBase
         if (count($matches) > 1) {
             $city = $matches[count($matches) - 2];
             $address = str_replace($city, '', $address);
+        } else {
+            $city = '';
         }
         preg_match('/(.*?(區|縣|鎮|鄉|街道))/', $address, $matches);
         if (count($matches) > 1) {
             $area = $matches[count($matches) - 2];
             $address = str_replace($area, '', $address);
+        } else {
+            $area = '';
         }
+
+        $city = str_replace(':', '', $city);
+        $city = str_replace('公司地址', '', $city);
+        $city = str_replace('(填寫詳細至號)', '', $city);
+        $city = trim($city);
+
         return [
-            'city' => isset($city) ? $city : '',
-            'area' => isset($area) ? $area : '',
+            'city' => $city,
+            'area' => $area,
         ];
     }
 

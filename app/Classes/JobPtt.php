@@ -55,7 +55,7 @@ class JobPtt extends JobBase
 
         $stop_scan = false;
 
-        $max_limit = 10;
+        $max_limit = 1;
 
         while(!$stop_scan)
         {
@@ -398,17 +398,17 @@ class JobPtt extends JobBase
         $descript = str_replace('up', '', $descript);
         $descript = str_replace('UP', '', $descript);
 
-        $patten = '/薪資\D*(\d*)[~|-](\d*)/';
+        $min_salary_pattern = '/薪資\D*(\d*\.\d*|\d*).*<\/br>/';
+        $max_salary_pattern = '/薪資\D*\d*\D*(\d*\.\d*|\d*).*<\/br>/';
 
-        $match = [];
+        $min_match = [];
+        $max_match = [];
 
-        if (!preg_match($patten, $descript, $match))
-        {
-            return [];
-        }
+        preg_match($min_salary_pattern, $descript, $min_match);
+        preg_match($max_salary_pattern, $descript, $max_match);
 
-        $min_salary = $match[1] ?? 0;
-        $max_salary = $match[2] ?? 0;
+        $min_salary = $min_match[1] ?? 0;
+        $max_salary = $max_match[1] ?? 0;
 
         return [$min_salary, $max_salary];
     }
@@ -421,6 +421,7 @@ class JobPtt extends JobBase
     private function get_job_data(array $ids)
     {
         $job_data = [];
+        $salary_data = [];
 
         foreach ($ids as $article_id) {
             $url = $this->_ptt_url . $article_id . '.html';
@@ -454,6 +455,7 @@ class JobPtt extends JobBase
             $job['appear_date']    = $this->_find_postdate($content);
 
             $salary = $this->_find_salary($job['description']);
+            $salary_data[] = $salary;
 
             if (!empty($salary)) {
                 $job['min_salary'] = (int) $salary[0];
@@ -465,6 +467,7 @@ class JobPtt extends JobBase
 
             $job_data[] = $job;
         }
+        dd($job_data);
 
         return $job_data;
     }
