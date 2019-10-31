@@ -406,8 +406,8 @@ class JobPtt extends JobBase
 
         $descript = $matches[0];
 
-        $min_salary_pattern = '/薪資\D*(\d*\.\d*|\d*).*<\/br>/';
-        $max_salary_pattern = '/薪資\D*\d*[-|~](\d*\.\d*|\d*).*<\/br>/';
+        $min_salary_pattern = '/\D*(\d*\.\d*|\d*).*<\/br>/';
+        $max_salary_pattern = '/\D*\d*[-|~](\d*\.\d*|\d*).*<\/br>/';
 
         $min_match = [];
         $max_match = [];
@@ -474,7 +474,22 @@ class JobPtt extends JobBase
 
             $job_data[] = $job;
         }
-        dd($job_data);
+
+
+        $response = [];
+        foreach ($job_data as $data) {
+
+            if (!preg_match('/薪資(.{100})/', $data['description'], $matches)) {
+                return[];
+            }
+
+            $response[] = [
+                'description' => $matches[0],
+                'min_salary' => $data['min_salary'],
+                'max_salary' => $data['max_salary'],
+            ];
+        }
+        dd($response);
 
         return $job_data;
     }
