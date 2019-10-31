@@ -41,14 +41,23 @@ abstract class JobBase
 
     public function get_region($address)
     {
-        preg_match('/(.*?(市|自治州|地區|區劃|縣))/', $address, $matches);
+        if (!preg_match('/公司地址(.{100})/', $address, $matches)) {
+            return [
+                'city' => '',
+                'area' => '',
+            ];
+        }
+
+        $address = $matches[1];
+
+        preg_match('/(.{6}(市|縣))/', $address, $matches);
         if (count($matches) > 1) {
             $city = $matches[count($matches) - 2];
             $address = str_replace($city, '', $address);
         } else {
             $city = '';
         }
-        preg_match('/(.*?(區|縣|鎮|鄉|街道))/', $address, $matches);
+        preg_match('/(.{6}(市|區|縣|鎮|鄉))/', $address, $matches);
         if (count($matches) > 1) {
             $area = $matches[count($matches) - 2];
             $address = str_replace($area, '', $address);

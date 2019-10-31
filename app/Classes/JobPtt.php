@@ -84,12 +84,14 @@ class JobPtt extends JobBase
         // 取得ids job
         $job_data = $this->get_job_data($all_ids);
 
+        dd($job_data);
+
         // 寫進dynamodb & CloudSearch
         foreach ($job_data as $job) {
             $this->sdk->dynamoPutItem('PttJobs', $job);
         }
 
-        $this->sdk->CloudSearchPutJob($job_data, 'ptt');
+        $this->sdk->cloudSearchPutJob($job_data, 'ptt');
     }
 
     private function get_ids_by_page(int $page = 1)
@@ -363,7 +365,7 @@ class JobPtt extends JobBase
     	$content = preg_replace('/\s(?=\s)/', '', $content);
     	$content = preg_replace('/[\n\r\t]/', '</br>', $content);
 
-    	$patten = '/<span class=\"article\-meta\-value\">.*<\/span><\/div>(.*)\<span\ class\=\"f2\"\>.*發信站.*/';
+        $patten = '/<span class=\"article\-meta\-value\">.*\d<\/span><\/div>(.*)\<span\ class\=\"f2\"\>.*發信站.*/';
 
 
     	if (!preg_match($patten, $content, $match))
@@ -389,6 +391,7 @@ class JobPtt extends JobBase
         if (empty($descript)) {
             return[];
         }
+
         $descript = str_replace(' ', '', $descript);
         $descript = preg_replace('/\s(?=\s)/', '', $descript);
         $descript = str_replace(',', '', $descript);
@@ -397,9 +400,14 @@ class JobPtt extends JobBase
         $descript = str_replace('$', '', $descript);
         $descript = str_replace('up', '', $descript);
         $descript = str_replace('UP', '', $descript);
+        if (!preg_match('/薪資(.{100})/', $descript, $matches)) {
+            return[];
+        }
+
+        $descript = $matches[0];
 
         $min_salary_pattern = '/薪資\D*(\d*\.\d*|\d*).*<\/br>/';
-        $max_salary_pattern = '/薪資\D*\d*\D*(\d*\.\d*|\d*).*<\/br>/';
+        $max_salary_pattern = '/薪資\D*\d*[-|~](\d*\.\d*|\d*).*<\/br>/';
 
         $min_match = [];
         $max_match = [];
@@ -444,10 +452,7 @@ class JobPtt extends JobBase
                 continue;
             }
 
-            $region = $this->get_region($content);
-
             $job['company_name']   = $this->_find_company_name($content);
-            $job['region']   = $region['city'] . $region['area'];
             $job['description']  = $this->_find_job_description($content);
             $job['source_url']   = $url;
             $job['source']       = 'ptt';
@@ -458,12 +463,14 @@ class JobPtt extends JobBase
             $salary_data[] = $salary;
 
             if (!empty($salary)) {
-                $job['min_salary'] = (int) $salary[0];
-                $job['max_salary'] = (int) $salary[1];
+                $job['min_salary'] = (float) $salary[0];
+                $job['max_salary'] = (float) $salary[1];
             } else {
                 $job['min_salary'] = 0;
                 $job['max_salary'] = 0;
             }
+            $region = $this->get_region($job['description']);
+            $job['region']   = $region['city'] . $region['area'];
 
             $job_data[] = $job;
         }

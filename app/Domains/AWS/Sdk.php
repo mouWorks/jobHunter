@@ -127,7 +127,7 @@ class Sdk extends \Aws\Sdk
     private function _parse_ptt(array $job)
     {
         // 地區,薪資min,薪資max,工作職稱,公司名稱,公司圖片,工作描述,url,source,time
-        $description = empty($job['description']) ? '' : strip_tags(substr($job['description'], 1, 200));
+        $description = empty($job['description']) ? '' : strip_tags(substr($job['description'], 0, 200));
         return [
             'id' => $job['id'],
             'region' => $job['region'] ?? '',
@@ -149,7 +149,7 @@ class Sdk extends \Aws\Sdk
         return floor($sec . ($usec * 1000));
     }
 
-    public function CloudSearchPutJob(array $job_data, string $source): void
+    public function cloudSearchPutJob(array $job_data, string $source): void
     {
         $allow_resource = ['104', 'line', 'ptt'];
 
