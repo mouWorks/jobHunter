@@ -48,7 +48,7 @@ class JobControllerTest extends TestCase
         $job = $this->app->make(JobPtt::class);
 
         // act
-        $result = $job->update();
+        $result = $job->update_aws();
 //        $result = $job->testAWS();
 
         // assert

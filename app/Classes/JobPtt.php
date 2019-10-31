@@ -2,6 +2,7 @@
 namespace App\Classes;
 
 use App\Classes\JobBase;
+use App\Domains\AWS\Sdk;
 use App\Library\Curl;
 use App\Models\Job;
 use App\Models\Company;
@@ -34,6 +35,80 @@ class JobPtt extends JobBase
     public $_total_page = 0;
 
     private $_limit = 50;
+
+    /** @var Sdk */
+    private $sdk;
+
+    public function __construct()
+    {
+        $this->sdk = app()->make(Sdk::class);
+    }
+
+    public function update_aws()
+    {
+        // 取得第一筆CloudSearch ptt id
+        $first_job_id = $this->_get_first_job_id();
+
+        $page = 1;
+
+        $all_ids = [];
+
+        $stop_scan = false;
+
+        $max_limit = 1;
+
+        while(!$stop_scan)
+        {
+            $tmp_ids = $this->get_ids_by_page($page);
+
+            if (!empty($first_job_id)) {
+                if (in_array($first_job_id, $tmp_ids)) {
+                    $index = array_search($first_job_id, $tmp_ids);
+                    $stop_scan = true;
+                    if ($index === 0) {
+                        return;
+                    }
+                    $tmp_ids = array_slice($tmp_ids, 0, $index);
+                }
+            }
+
+            $all_ids = array_merge($all_ids, $tmp_ids);
+
+            $page++;
+
+            if ($page > $max_limit) {
+                $stop_scan = true;
+            }
+        }
+
+        // 取得ids job
+        $this->get_job_info($all_ids);
+
+        // todo 寫進dynamodb & CloudSearch
+    }
+
+    private function get_ids_by_page(int $page = 1)
+    {
+        $url = $this->_serch_url . '&page=' . $page;
+
+        $result = Curl::get_response($url);
+
+        if (!$result['status'])
+        {
+            exit("今天不順，抓不到資料");
+        }
+
+        $this->_content = $result['data'];
+
+        $patten = '/.*\<a\ href="\/bbs\/Soft_Job\/(.*).html\"\>\[徵才\]\ (.*)\<\/a\>.*/';
+
+        if (!preg_match_all($patten, $this->_content, $match))
+        {
+            return [];
+        }
+
+        return $match[1];
+    }
 
     /**
      * 從來源更新資料庫
@@ -214,12 +289,10 @@ class JobPtt extends JobBase
 
     	if (!preg_match_all($patten, $content, $match))
     	{
-    		return FALSE;
+    		return [];
     	}
 
-    	if (!empty($match[1])) {
-            $this->_ptt_article_ids = array_merge($this->_ptt_article_ids, $match[1]);
-        }
+    	return $match[1];
     }
 
     private function _find_list_page_btn($content = "")
@@ -281,9 +354,8 @@ class JobPtt extends JobBase
     {
     	$content = preg_replace('/\s(?=\s)/', '', $content);
     	$content = preg_replace('/[\n\r\t]/', '</br>', $content);
-//        $content = nl2br($content);
 
-    	$patten = '/<span class=\"article\-meta-value\">.*<\/span><\/div>(.*)\<span\ class\=\"f2\"\>.*發信站.*/';
+    	$patten = '/<span class=\"article\-meta\-value\">.*<\/span><\/div>(.*)\<span\ class\=\"f2\"\>.*發信站.*/';
 
 
     	if (!preg_match($patten, $content, $match))
@@ -304,12 +376,21 @@ class JobPtt extends JobBase
         return Job::search($param);
     }
 
-    private function _find_salary(string $descript)
+    private function _find_salary(?string $descript)
     {
+        if (empty($descript)) {
+            return[];
+        }
         $descript = str_replace(' ', '', $descript);
+        $descript = preg_replace('/\s(?=\s)/', '', $descript);
         $descript = str_replace(',', '', $descript);
+        $descript = str_replace('K', '000', $descript);
+        $descript = str_replace('k', '000', $descript);
+        $descript = str_replace('$', '', $descript);
+        $descript = str_replace('up', '', $descript);
+        $descript = str_replace('UP', '', $descript);
 
-        $patten = '/薪資\D*(\d*|\d*[K|k])[~|-](\d*|\d*[K|k])/';
+        $patten = '/薪資\D*(\d*)[~|-](\d*)/';
 
         $match = [];
 
@@ -318,6 +399,65 @@ class JobPtt extends JobBase
             return [];
         }
 
-        return [$match[1], $match[2]];
+        $min_salary = $match[1] ?? 0;
+        $max_salary = $match[2] ?? 0;
+
+        return [$min_salary, $max_salary];
+    }
+
+    private function _get_first_job_id()
+    {
+        return null;
+    }
+
+    private function get_job_info(array $ids)
+    {
+        foreach ($ids as $article_id) {
+            $url = $this->_ptt_url . $article_id . '.html';
+            $result = Curl::get_response($url);
+
+            if (!$result['status']) {
+                echo "取不到該筆資料 " . $url;
+                continue;
+            }
+
+            $content = $result['data'];
+
+            //整理格式後寫到 DB
+            $job_data['id'] = $article_id;
+            $job_data['title']        = $this->_find_job_title($content);
+
+            if (NULL == $job_data['title'])
+            {
+                echo "該筆抓不到 title " . $url;
+                continue;
+            }
+
+            $job_data['company_name']   = $this->_find_company_name($content);
+            $job_data['description']  = $this->_find_job_description($content);
+            $job_data['source_url']   = $url;
+            $job_data['source']       = 'ptt';
+            $job_data['j_code']       = $this->_gen_hash_code($job_data['title']);
+            $job_data['appear_date']    = $this->_find_postdate($content);
+
+            $salary = $this->_find_salary($job_data['description']);
+
+            if (!empty($salary)) {
+                $job_data['sal_month_low'] = (int) $salary[0];
+                $job_data['sal_month_high'] = (int) $salary[1];
+            } else {
+                $job_data['sal_month_low'] = 0;
+                $job_data['sal_month_high'] = 0;
+            }
+
+            $data[] = $job_data;
+            // todo 寫進dynamoDB
+            // todo 寫進CloudSearch
+//            $jobID = Job::insert($job_data);
+            $this->sdk->dynamoPutItem('PttJobs', $job_data);
+
+        }
+
+        dd($data);
     }
 }

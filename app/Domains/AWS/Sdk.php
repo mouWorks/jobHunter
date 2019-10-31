@@ -2,6 +2,7 @@
 
 namespace App\Domains\AWS;
 
+use Aws\CloudSearchDomain\CloudSearchDomainClient;
 use Aws\Credentials\Credentials;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Marshaler;
@@ -11,6 +12,8 @@ class Sdk extends \Aws\Sdk
     private $_credentials;
 
     private $_dynamoDb;
+
+    private $_cloud_search;
 
     public function __construct(array $args = [])
     {
@@ -36,7 +39,7 @@ class Sdk extends \Aws\Sdk
      * @param $tableName
      * @param $data
      */
-    public function dynamoPutItem(string $tableName, array $data)
+    public function dynamoPutItem(string $tableName, array $data): void
     {
         $data = array_filter($data);
 
@@ -51,7 +54,7 @@ class Sdk extends \Aws\Sdk
         $this->getDynamoDB()->putItem($params);
     }
 
-    public function dynamoGetItem(string $tableName, array $keys)
+    public function dynamoGetItem(string $tableName, array $keys): array
     {
         $keys = array_filter($keys);
 
@@ -66,7 +69,7 @@ class Sdk extends \Aws\Sdk
         $this->getDynamoDB()->getItem($params);
     }
 
-    public function dynamoBatchGetItem(string $table, string $key, string $type, array $values)
+    public function dynamoBatchGetItem(string $table, string $key, string $type, array $values): array
     {
         $keys = [];
 
@@ -108,5 +111,28 @@ class Sdk extends \Aws\Sdk
         }
 
         return $this->_dynamoDb;
+    }
+
+    public function getCloudSearch(): CloudSearchDomainClient
+    {
+        if (is_null($this->_cloud_search)) {
+            $this->_cloud_search = $this->createCloudSearchDomain([
+                'endpoint' => env('AWS_CLOUDSEARCH_ENDPOINT')
+            ]);
+        }
+
+        return $this->_cloud_search;
+    }
+
+    public function searchPutDocument(array $documents): void
+    {
+        try {
+            $this->getCloudSearch()->uploadDocuments([
+                'contentType' => 'application/json',
+                'documents' => json_encode($documents),
+            ]);
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+        }
     }
 }
