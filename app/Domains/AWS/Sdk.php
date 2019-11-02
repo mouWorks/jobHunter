@@ -127,7 +127,7 @@ class Sdk extends \Aws\Sdk
     private function _parse_ptt(array $job)
     {
         // 地區,薪資min,薪資max,工作職稱,公司名稱,公司圖片,工作描述,url,source,time
-        $description = empty($job['description']) ? '' : strip_tags(substr($job['description'], 0, 200));
+        $description = empty($job['description']) ? '' : strip_tags(mb_substr($job['description'], 0, 300));
         return [
             'id' => $job['id'],
             'region' => $job['region'] ?? '',
@@ -149,6 +149,58 @@ class Sdk extends \Aws\Sdk
         return floor($sec . ($usec * 1000));
     }
 
+    public function cloudSearchDoSearch(
+        array $options,
+        string $keyWord = '',
+        int $perPage = 20,
+        int $page = 1,
+        string $sort = 'create_time desc',
+        array $equalParams = []
+    )
+    {
+        $offset = ($page-1) * $perPage;
+
+
+        $params = [
+            'size' => $perPage,
+            'query' => $keyWord, // 關鍵字
+            'queryParser' => 'dismax', // http://docs.aws.amazon.com/cloudsearch/latest/developerguide/searching.html
+            'queryOptions' => json_encode(['fields' => $options]),
+            'sort' => $sort, // 排序
+            'start' => $offset // 分頁
+        ];
+
+        if (!empty($equalParams)) {
+            $filterQuery = '(and ';
+
+            foreach ($equalParams as $fieldName => $value) {
+                $filterQuery .= "(term field=$fieldName $value) ";
+            }
+
+            $filterQuery .= ')';
+
+            $params['filterQuery'] = $filterQuery;
+        }
+
+        $data = $this->getCloudSearch()->search($params);
+
+        if ($data['hits']['found'] === 0) {
+            return [];
+        }
+
+        // convert data format
+        $response = [];
+        foreach ($data['hits']['hit'] as $document) {
+            $tmpData = [];
+            foreach ($document['fields'] as $field => $value) {
+                $tmpData[$field] = end($value);
+            }
+            $response[] = $tmpData;
+        }
+
+        return $response;
+    }
+
     public function cloudSearchPutJob(array $job_data, string $source): void
     {
         $allow_resource = ['104', 'line', 'ptt'];
@@ -158,8 +210,6 @@ class Sdk extends \Aws\Sdk
         }
         $time = $this->_get_time();
 
-        $documents = [];
-
         foreach ($job_data as $index => $job) {
             $job = $this->{'_parse_' . $source}($job);
             $job['create_time'] = $time++;
@@ -168,6 +218,7 @@ class Sdk extends \Aws\Sdk
                 'id' => $job['id'],
                 'fields' => $job,
             ];
+            $jobs[] = $job;
 
             try {
                 var_dump($index);
@@ -176,7 +227,6 @@ class Sdk extends \Aws\Sdk
                     'documents' => json_encode([$documents]),
                 ]);
             } catch (\Exception $e) {
-//                dd($e->getMessage());
                 var_dump($e->getMessage());
             }
         }

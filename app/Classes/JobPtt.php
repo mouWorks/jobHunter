@@ -83,14 +83,12 @@ class JobPtt extends JobBase
 
         // 取得ids job
         $job_data = $this->get_job_data($all_ids);
-
-        dd($job_data);
+        $job_data = array_reverse($job_data);
 
         // 寫進dynamodb & CloudSearch
         foreach ($job_data as $job) {
             $this->sdk->dynamoPutItem('PttJobs', $job);
         }
-
         $this->sdk->cloudSearchPutJob($job_data, 'ptt');
     }
 
@@ -406,8 +404,8 @@ class JobPtt extends JobBase
 
         $descript = $matches[0];
 
-        $min_salary_pattern = '/\D*(\d*\.\d*|\d*).*<\/br>/';
-        $max_salary_pattern = '/\D*\d*[-|~](\d*\.\d*|\d*).*<\/br>/';
+        $min_salary_pattern = '/\D*(\d*\.\d*|\d*).*/';
+        $max_salary_pattern = '/\D*\d*[-|~](\d*\.\d*|\d*).*/';
 
         $min_match = [];
         $max_match = [];
@@ -423,7 +421,12 @@ class JobPtt extends JobBase
 
     private function _get_first_job_id()
     {
-        return null;
+        // 取第一筆
+        $data = $this->sdk->cloudSearchDoSearch(['source'], 'ptt', 1);
+
+        $data = reset($data);
+
+        return $data['id'] ?? null;
     }
 
     private function get_job_data(array $ids)
@@ -466,30 +469,14 @@ class JobPtt extends JobBase
                 $job['min_salary'] = (float) $salary[0];
                 $job['max_salary'] = (float) $salary[1];
             } else {
-                $job['min_salary'] = 0;
-                $job['max_salary'] = 0;
+                $job['min_salary'] = 0.0;
+                $job['max_salary'] = 0.0;
             }
             $region = $this->get_region($job['description']);
             $job['region']   = $region['city'] . $region['area'];
 
             $job_data[] = $job;
         }
-
-
-        $response = [];
-        foreach ($job_data as $data) {
-
-            if (!preg_match('/薪資(.{100})/', $data['description'], $matches)) {
-                return[];
-            }
-
-            $response[] = [
-                'description' => $matches[0],
-                'min_salary' => $data['min_salary'],
-                'max_salary' => $data['max_salary'],
-            ];
-        }
-        dd($response);
 
         return $job_data;
     }
