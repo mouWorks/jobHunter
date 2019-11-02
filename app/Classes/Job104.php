@@ -352,7 +352,7 @@ class Job104 extends JobBase
                 $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
                 $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
                 $not_exist_company[$c_code]['img'] = $company_info[$c_code]['img'];
-                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
+                $this->sdk->dynamoPutItems('companies', $not_exist_company[$c_code]);
             }
         }
 

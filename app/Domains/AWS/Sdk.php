@@ -2,6 +2,7 @@
 
 namespace App\Domains\AWS;
 
+use App\Library\Lib;
 use Aws\CloudSearchDomain\CloudSearchDomainClient;
 use Aws\Credentials\Credentials;
 use Aws\DynamoDb\DynamoDbClient;
@@ -36,10 +37,10 @@ class Sdk extends \Aws\Sdk
 
     /**
      * dynamoDB put item
-     * @param $tableName
-     * @param $data
+     * @param string $tableName
+     * @param array $data
      */
-    public function dynamoPutItem(string $tableName, array $data): void
+    public function dynamoPutItem(string $tableName, array $data)
     {
         $data = array_filter($data);
 
@@ -52,6 +53,33 @@ class Sdk extends \Aws\Sdk
         ];
 
         $this->getDynamoDB()->putItem($params);
+    }
+
+    /**
+     * dynamoDB put multiple item
+     * @param $tableName
+     * @param $data
+     */
+    public function dynamoPutItems(string $tableName, array $data): void
+    {
+        $putRequest = [];
+        foreach ($data as $raw) {
+            $putRequest[] = [
+                'PutRequest' => [
+                    'Item' => $raw
+                ]
+            ];
+        }
+
+        $request = [
+            'RequestItems' => [
+                $tableName => $putRequest,
+             ],
+        ];
+
+        $this->getDynamoDB()->batchWriteItem($request);
+
+        return;
     }
 
     public function dynamoGetItem(string $tableName, array $keys): array
@@ -131,8 +159,8 @@ class Sdk extends \Aws\Sdk
         return [
             'id' => $job['id'],
             'region' => $job['region'] ?? '',
-            'max_salary' => $job['max_salary'] ?? '',
-            'min_salary' => $job['min_salary'] ?? '',
+            'max_salary' => (int) $job['max_salary'] ?? 0,
+            'min_salary' => (int) $job['min_salary'] ?? 0,
             'job_title' => $job['title'],
             'company_name' => $job['company_name'] ?? '',
             'company_img' => '',
@@ -225,6 +253,43 @@ class Sdk extends \Aws\Sdk
                 $this->getCloudSearch()->uploadDocuments([
                     'contentType' => 'application/json',
                     'documents' => json_encode([$documents]),
+                ]);
+            } catch (\Exception $e) {
+                var_dump($e->getMessage());
+            }
+        }
+    }
+
+    public function cloudSearchPutJobs(array $job_data, string $source): void
+    {
+        $allow_resource = ['104', 'line', 'ptt'];
+
+        if (!in_array($source, $allow_resource)) {
+            return;
+        }
+        $time = $this->_get_time();
+
+        // 將job資料每100筆包成一個block
+        $chunk_job = array_chunk($job_data, 100);
+
+        Lib::runtime_output_message('寫入CloudSearch中...');
+        foreach ($chunk_job as $index => $job_block) {
+            Lib::runtime_output_message(($index+1) * 100 . '筆..');
+            $documents = [];
+            foreach ($job_block as $index => $job) {
+                $job = $this->{'_parse_' . $source}($job);
+                $job['create_time'] = $time++;
+                $documents[] = [
+                    'type' => 'add',
+                    'id' => $job['id'],
+                    'fields' => $job,
+                ];
+            }
+
+            try {
+                $this->getCloudSearch()->uploadDocuments([
+                    'contentType' => 'application/json',
+                    'documents' => json_encode($documents),
                 ]);
             } catch (\Exception $e) {
                 var_dump($e->getMessage());

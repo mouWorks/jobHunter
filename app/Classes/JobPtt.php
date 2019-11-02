@@ -4,6 +4,7 @@ namespace App\Classes;
 use App\Classes\JobBase;
 use App\Domains\AWS\Sdk;
 use App\Library\Curl;
+use App\Library\Lib;
 use App\Models\Job;
 use App\Models\Company;
 
@@ -48,6 +49,7 @@ class JobPtt extends JobBase
     {
         // 取得第一筆CloudSearch ptt id
         $first_job_id = $this->_get_first_job_id();
+        $first_job_id = null;
 
         $page = 1;
 
@@ -55,10 +57,11 @@ class JobPtt extends JobBase
 
         $stop_scan = false;
 
-        $max_limit = 1;
+        $max_limit = 50;
 
         while(!$stop_scan)
         {
+            Lib::runtime_output_message('爬PTT職缺id中，第' . $page . '頁..');
             $tmp_ids = $this->get_ids_by_page($page);
 
             if (!empty($first_job_id)) {
@@ -86,10 +89,15 @@ class JobPtt extends JobBase
         $job_data = array_reverse($job_data);
 
         // 寫進dynamodb & CloudSearch
-        foreach ($job_data as $job) {
+        Lib::runtime_output_message('寫入dynamoDB中...');
+        foreach ($job_data as $index => $job) {
+            if ($index % 100 === 0) {
+                Lib::runtime_output_message(($index+1) * 100 . '筆..');
+            }
             $this->sdk->dynamoPutItem('PttJobs', $job);
         }
-        $this->sdk->cloudSearchPutJob($job_data, 'ptt');
+//        $this->sdk->dynamoPutItems('PttJobs', $job_data);
+        $this->sdk->cloudSearchPutJobs($job_data, 'ptt');
     }
 
     private function get_ids_by_page(int $page = 1)
@@ -434,7 +442,11 @@ class JobPtt extends JobBase
         $job_data = [];
         $salary_data = [];
 
-        foreach ($ids as $article_id) {
+        Lib::runtime_output_message('爬蟲PTT爬職缺內容開始...');
+        foreach ($ids as $index => $article_id) {
+            if ($index % 100 === 0) {
+                Lib::runtime_output_message(($index + 1 * 100) . '筆..');
+            }
             $url = $this->_ptt_url . $article_id . '.html';
             $result = Curl::get_response($url);
 
