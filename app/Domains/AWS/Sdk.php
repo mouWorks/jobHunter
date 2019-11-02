@@ -182,8 +182,8 @@ class Sdk extends \Aws\Sdk
         string $keyWord = '',
         int $perPage = 20,
         int $page = 1,
-        string $sort = 'create_time desc',
-        array $equalParams = []
+        array $equalParams = [],
+        string $sort = 'create_time desc'
     )
     {
         $offset = ($page-1) * $perPage;
@@ -202,7 +202,7 @@ class Sdk extends \Aws\Sdk
             $filterQuery = '(and ';
 
             foreach ($equalParams as $fieldName => $value) {
-                $filterQuery .= "(term field=$fieldName $value) ";
+                $filterQuery .= "(term field=$fieldName '$value') ";
             }
 
             $filterQuery .= ')';

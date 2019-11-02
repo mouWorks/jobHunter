@@ -1,18 +1,18 @@
 <?php
 namespace App\Classes;
 
-use App\Classes\JobBase;
 use App\Domains\AWS\Sdk;
 use App\Library\Curl;
 use App\Library\Lib;
 use App\Models\Job;
-use App\Models\Company;
 
 /**
 * Job PTT
 */
 class JobPtt extends JobBase
 {
+    public const SOURCE = 'ptt';
+
     /**
      * 允許搜尋的欄位
      *
@@ -57,7 +57,7 @@ class JobPtt extends JobBase
 
         $stop_scan = false;
 
-        $max_limit = 50;
+        $max_limit = 20;
 
         while(!$stop_scan)
         {
@@ -97,7 +97,7 @@ class JobPtt extends JobBase
             $this->sdk->dynamoPutItem('PttJobs', $job);
         }
 //        $this->sdk->dynamoPutItems('PttJobs', $job_data);
-        $this->sdk->cloudSearchPutJobs($job_data, 'ptt');
+        $this->sdk->cloudSearchPutJobs($job_data, self::SOURCE);
     }
 
     private function get_ids_by_page(int $page = 1)
@@ -230,7 +230,7 @@ class JobPtt extends JobBase
 
             $job_data['description']  = $this->_find_job_description($content);
             $job_data['source_url']   = $url;
-            $job_data['source']       = 'ptt';
+            $job_data['source']       = self::SOURCE;
             $job_data['j_code']       = $this->_gen_hash_code($job_data['title']);
 //            $job_data['companyID']    = $companyID;
             $job_data['appear_date']    = $this->_find_postdate($content);
@@ -241,7 +241,6 @@ class JobPtt extends JobBase
                 $job_data['sal_month_low'] = $salary[0];
                 $job_data['sal_month_high'] = $salary[1];
             }
-            dd($job_data);
             // todo 寫進dynamoDB
             // todo 寫進CloudSearch
             $jobID = Job::insert($job_data);
@@ -430,7 +429,7 @@ class JobPtt extends JobBase
     private function _get_first_job_id()
     {
         // 取第一筆
-        $data = $this->sdk->cloudSearchDoSearch(['source'], 'ptt', 1);
+        $data = $this->sdk->cloudSearchDoSearch(['source'], self::SOURCE, 1);
 
         $data = reset($data);
 
@@ -470,7 +469,7 @@ class JobPtt extends JobBase
             $job['company_name']   = $this->_find_company_name($content);
             $job['description']  = $this->_find_job_description($content);
             $job['source_url']   = $url;
-            $job['source']       = 'ptt';
+            $job['source']       = self::SOURCE;
             $job['j_code']       = $this->_gen_hash_code($job['title']);
             $job['appear_date']    = $this->_find_postdate($content);
 
@@ -489,6 +488,19 @@ class JobPtt extends JobBase
 
             $job_data[] = $job;
         }
+
+        return $job_data;
+    }
+
+    public function get_jobs($conditions)
+    {
+        $job_data = $this->sdk->cloudSearchDoSearch(
+            ['job_title'],
+            $conditions['kws'],
+            20,
+            $conditions['page'],
+            ['source' => 'ptt']
+        );
 
         return $job_data;
     }

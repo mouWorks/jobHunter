@@ -29,7 +29,7 @@ class Job104 extends JobBase
 
     public function __construct()
     {
-        define('JSON_DIR', __DIR__ . '/../../resources/json/');
+//        define('JSON_DIR', __DIR__ . '/../../resources/json/');
 
         $this->sdk = app()->make(Sdk::class);
     }
@@ -352,7 +352,7 @@ class Job104 extends JobBase
                 $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
                 $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
                 $not_exist_company[$c_code]['img'] = $company_info[$c_code]['img'];
-                $this->sdk->dynamoPutItems('companies', $not_exist_company[$c_code]);
+                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
             }
         }
 
