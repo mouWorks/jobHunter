@@ -1,11 +1,16 @@
 <?php
 namespace App\Classes;
 
-use App\Classes\JobBase;
+use App\Domains\AWS\Sdk;
+use App\Library\Lib;
+use Aws\DynamoDb\Exception\DynamoDbException;
+use Aws\DynamoDb\Marshaler;
+use GuzzleHttp\Promise;
 use App\Library\Curl;
 use App\Library\Debug;
 use App\Models\Company;
 use App\Models\Job;
+use GuzzleHttp\Client;
 
 
 /**
@@ -19,9 +24,14 @@ class Job104 extends JobBase
      */
     private $_preview_mode = FALSE;
 
+    /** @var Sdk */
+    private $sdk;
+
     public function __construct()
     {
-        define('JSON_DIR', __DIR__ . '/../../resources/json/');
+//        define('JSON_DIR', __DIR__ . '/../../resources/json/');
+
+        $this->sdk = app()->make(Sdk::class);
     }
 
     /**
@@ -209,7 +219,7 @@ class Job104 extends JobBase
         {
             return ['資料取得錯誤'];
         }
-        
+
         // 寫入資料
         if ( ! $this->_preview_mode)
         {
@@ -222,16 +232,16 @@ class Job104 extends JobBase
                 	echo "該筆垃圾 ";
                 	continue;
                 }
-                
+
             	$company_data = $this->_convert_company_row_data($row);
-            	
+
                 $companyID = Company::insert($company_data);
 
                 // 寫入 job 資料表
                 $job_data = $this->_convert_job_row_data($row);
-                
+
                 $job_data['companyID'] = $companyID;
-                
+
                 //var_dump($job_data);
                 $jobID = Job::insert($job_data);
             }
@@ -292,4 +302,192 @@ class Job104 extends JobBase
         $content = file_get_contents($file);
         return "<pre>" .  print_r(json_decode($content), TRUE). "</pre>";
     }
+
+    /**
+     * 取得工作 & 公司資訊
+     * @param $conditions
+     * @return array
+     */
+    public function get_jobs($conditions)
+    {
+        // 設定查詢條件
+        $this->_set_update_condition($conditions);
+
+        // 取得 api 網址，查詢資料
+        $url = $this->_get_api_url();
+
+        // 取得job資料
+        $job_data = Curl::get_json_data($url);
+
+        if (is_null($job_data)) {
+            return [];
+        }
+
+        // c_code 從dynamoDB取得公司資料
+        $c_codes = array_column($job_data['data'], 'C');
+        $exist_company = $this->_get_companies($c_codes);
+        $not_exist_company = [];
+
+        foreach ($job_data['data'] as $job)
+        {
+            // 取得不存在dynamodb的公司
+            if (!empty($job['C']) && empty($exist_company[$job['C']])) {
+                $not_exist_company[$job['C']] = $this->_convert_company_row_data($job);
+            }
+        }
+
+        if (!empty($not_exist_company)) {
+            $c_codes = array_column($not_exist_company, 'c_code');
+            // 非同步取得company url id
+            $url_ids = $this->_get_url_ids($c_codes);
+
+            $company_info = $this->_get_company_info($url_ids);
+
+            // combine公司資訊並寫入dynamoDB
+            foreach ($not_exist_company as $c_code => $company) {
+                if (empty($company_info[$c_code])) {
+                    continue;
+                }
+                $not_exist_company[$c_code]['employees'] = intval($company_info[$c_code]['empNo']);
+                $not_exist_company[$c_code]['capital'] = Lib::capital2number($company_info[$c_code]['capital']);
+                $not_exist_company[$c_code]['url'] = $url_ids[$c_code];
+                $not_exist_company[$c_code]['img'] = $company_info[$c_code]['img'];
+                $this->sdk->dynamoPutItem('companies', $not_exist_company[$c_code]);
+            }
+        }
+
+        $companies = array_merge($exist_company, $not_exist_company);
+
+        $response_job = [];
+
+        // combine jobs & companies
+        foreach ($job_data['data'] as $index => $job) {
+            $tmpJob = $this->_convert_job_row_data($job);
+            $response_job[$index] = $tmpJob;
+            if (!empty($job['C'])) {
+                $response_job[$index]['company'] = $companies[$job['C']] ?? null;
+            } else {
+                $response_job[$index]['company'] = null;
+            }
+        }
+
+        return $response_job;
+    }
+
+    public function _get_companies(array $c_codes): array
+    {
+        if (empty($c_codes)) {
+            return [];
+        }
+        $c_codes = array_unique($c_codes);
+        $companies = $this->sdk->dynamoBatchGetItem('companies', 'c_code', 'S', $c_codes);
+        $companies = collect($companies)->keyBy('c_code');
+        return $companies->toArray();
+    }
+
+    public function testCloudSearch($company)
+    {
+        $cloudSearch = $this->sdk->createCloudSearchDomain([
+            'endpoint' => env('AWS_CLOUDSEARCH_ENDPOINT')
+        ]);
+
+        $documents = [];
+
+        $index = 10;
+
+        foreach ($company as $com) {
+            $documents[] = [
+                'type' => 'add',
+                'id' => $com['c_code'],
+                'fields' => [
+                    'c_code' => $com['c_code'],
+                    'capital' => $com['capital'],
+                    'employees' => $com['employees'],
+                    'name' => $com['name'],
+                    'url' => $com['url'],
+                    'indcat' => $com['indcat'],
+                ],
+            ];
+        }
+
+        try {
+            $cloudSearch->uploadDocuments([
+                'contentType' => 'application/json',
+                'documents' => json_encode($documents),
+            ]);
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+        }
+        dd('success');
+    }
+
+    /**
+     * 使用c_code取得url_id
+     * @param array $c_codes
+     * @return array
+     */
+    private function _get_url_ids(array $c_codes): array
+    {
+        $url = "https://www.104.com.tw/";
+
+        $url_id_client = new Client(['base_uri' => $url]);
+
+        foreach ($c_codes as $c_code)
+        {
+            $promises[$c_code] = $url_id_client->getAsync("/jobbank/custjob/index.php?r=cust&j={$c_code}");
+        }
+
+        $results = Promise\settle($promises)->wait();
+
+        $url_ids = [];
+
+        foreach ($results as $c_code => $result) {
+            $response = $result['value']->getBody()->getContents();
+
+            preg_match_all('/<meta property="og:url" content="https:\/\/www\.104\.com\.tw\/company\/(.*)">/', $response, $matches);
+
+            if ( ! isset($matches[1][0])) {
+                continue;
+            }
+
+            $url_ids[$c_code] = $matches[1][0];
+        }
+
+        return $url_ids;
+    }
+
+    private function _get_company_info(array $url_ids)
+    {
+        $url = "https://www.104.com.tw/";
+
+        $client = new Client(['base_uri' => $url]);
+
+        foreach ($url_ids as $c_code => $url_id)
+        {
+            $promises[$c_code] = $client->getAsync("/company/ajax/content/{$url_id}");
+        }
+
+        $results = Promise\settle($promises)->wait();
+
+        $company_info = [];
+        foreach ($results as $code => $result) {
+            if (empty($result['value'])) {
+                continue;
+            }
+            $tmp_company = json_decode($result['value']->getBody()->getContents(), true);
+            $company_info[$code]['empNo'] = $tmp_company['data']['empNo'];
+            $company_info[$code]['capital'] = $tmp_company['data']['capital'];
+            $company_info[$code]['img'] = $tmp_company['data']['corpImage1'];
+            if (!empty($tmp_company['data']['corpImage1'])) {
+                $company_info[$code]['img'] = $tmp_company['data']['corpImage1'];
+            } elseif (!empty($tmp_company['data']['corpImage2'])) {
+                $company_info[$code]['img'] = $tmp_company['data']['corpImage2'];
+            } elseif (!empty($tmp_company['data']['corpImage3'])) {
+                $company_info[$code]['img'] = $tmp_company['data']['corpImage3'];
+            }
+        }
+
+        return $company_info;
+    }
+
 }

@@ -151,4 +151,9 @@ class Lib
 
         return $conditions;
     }
+
+    public static function runtime_output_message(string $msg)
+    {
+        fwrite(STDERR, $msg . "\n");
+    }
 }
