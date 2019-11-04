@@ -7,9 +7,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 class ExampleTest extends TestCase
 {
     /**
-     * A basic functional test example.
-     *
-     * @return void
+     * @group ignore
      */
     public function testBasicExample()
     {

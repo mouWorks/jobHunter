@@ -66,9 +66,16 @@ jobs:
       - slack/status:
           channel: 'jobhunter-ci'
           failure_message: "CI build Fail! , Check CircleCI"
-          success_message: "https://jobhunter.manycat.com.tw CI build Finished."
-          include_visit_job_action: true
+          fail_only: true
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
+
+      - slack/notify:
+          channel: 'jobhunter-ci'
+          title: "https://jobhunter.manycat.com.tw CI build Finished."
+          message: "Deployed by CircleCI"
+          color: "#42e2f4" # Optional: Assign custom colors for each notification
+          webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
+
 workflows:
   version: 2.1
   build_and_auto_deploy:
