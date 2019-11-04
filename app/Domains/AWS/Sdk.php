@@ -51,8 +51,11 @@ class Sdk extends \Aws\Sdk
             'TableName' => $tableName,
             'Item' => $item
         ];
-
-        $this->getDynamoDB()->putItem($params);
+        try {
+            $this->getDynamoDB()->putItem($params);
+        } catch (\Exception $e) {
+            Lib::runtime_output_message($e->getMessage() . '__' . json_encode($params));
+        }
     }
 
     /**
@@ -159,8 +162,8 @@ class Sdk extends \Aws\Sdk
         return [
             'id' => $job['id'],
             'region' => $job['region'] ?? '',
-            'max_salary' => (int) $job['max_salary'] ?? 0,
-            'min_salary' => (int) $job['min_salary'] ?? 0,
+            'max_salary' => $job['max_salary'] ?? 0,
+            'min_salary' => $job['min_salary'] ?? 0,
             'job_title' => $job['title'],
             'company_name' => $job['company_name'] ?? '',
             'company_img' => '',
@@ -274,7 +277,7 @@ class Sdk extends \Aws\Sdk
 
         Lib::runtime_output_message('寫入CloudSearch中...');
         foreach ($chunk_job as $index => $job_block) {
-            Lib::runtime_output_message(($index+1) * 100 . '筆..');
+            Lib::runtime_output_message('前' . ($index+1) * 100 . '筆..');
             $documents = [];
             foreach ($job_block as $index => $job) {
                 $job = $this->{'_parse_' . $source}($job);

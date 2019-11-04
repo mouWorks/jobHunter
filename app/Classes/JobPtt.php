@@ -57,7 +57,7 @@ class JobPtt extends JobBase
 
         $stop_scan = false;
 
-        $max_limit = 20;
+        $max_limit = 50;
 
         while(!$stop_scan)
         {
@@ -91,8 +91,9 @@ class JobPtt extends JobBase
         // 寫進dynamodb & CloudSearch
         Lib::runtime_output_message('寫入dynamoDB中...');
         foreach ($job_data as $index => $job) {
-            if ($index % 100 === 0) {
-                Lib::runtime_output_message(($index+1) * 100 . '筆..');
+            if ($index !== 0 && $index % 100 === 0) {
+                Lib::runtime_output_message('前' . $index . '筆..');
+                usleep(100);
             }
             $this->sdk->dynamoPutItem('PttJobs', $job);
         }
