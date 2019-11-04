@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Run Unit Test
           command: |
-            ./phpunit --exclude-group ignore --testdox
+            ./vendor/bin/phpunit --exclude-group ignore --testdox
 
       - slack/status:
           channel: 'jobhunter-ci'
