@@ -214,6 +214,8 @@ class Sdk extends \Aws\Sdk
             $params['filterQuery'] = $filterQuery;
         }
 
+//        $this->getCloudSearch()->getPaginator();
+
         $data = $this->getCloudSearch()->search($params);
 
         if ($data['hits']['found'] === 0) {
