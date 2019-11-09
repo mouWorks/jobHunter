@@ -86,7 +86,9 @@ jobs:
 
       - run:
           name: Move to Build Folder and Build !
-          shell: "cd /tmp/build && docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH . "
+          command: |
+            cd /tmp/build &&
+            docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH .
 
 #      - run:
 #          name: Build Docker Image
