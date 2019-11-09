@@ -16,6 +16,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup
+      - setup_remote_docker
       - run:
           name: check AWS Cli env
           command: aws --version
@@ -65,7 +66,7 @@ jobs:
   ## Docker Related
       - run:
           name: Docker Hub Login
-          command:  echo "${DOCKER_PASS}" | docker login --username ${DOCKER_USER} --password-stdin
+          command: echo "${DOCKER_PASS}" | docker login --username ${DOCKER_USER} --password-stdin
 
       - run:
           name: Check Docker Version
@@ -81,11 +82,15 @@ jobs:
 
       - run:
           name: Create folder for DockerImage
-          command: cp . /tmp/build
+          command: cp -r ./* /tmp/build
 
-#      - run:
-#          name: Build Docker Image
-#          command: docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH .
+      - run:
+          name: move to Build folder
+          command: cd /tmp/build
+
+      - run:
+          name: Build Docker Image
+          command: docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH .
 #      - run:
 #          name: Push to Docker Hub
 #          command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH
