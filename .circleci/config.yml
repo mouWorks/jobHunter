@@ -11,8 +11,8 @@ jobs:
     working_directory: ~/jobHunter
     executor: aws-cli/default
     environment:
-      - DOCKER_REPO: jobHunter
-      - DOCKER_IMAGE: nginx_php
+      - DOCKER_REPO: mouwang
+      - DOCKER_IMAGE: jobhunter-nginx-php
     steps:
       - checkout
       - aws-cli/setup
@@ -71,10 +71,21 @@ jobs:
           name: Check Docker Version
           command: docker -v
 
+      - run:
+          name: Create folder for DockerImage
+          command: mkdir /tmp/build
+
+      - run:
+          name: Copy Dockerfile settings
+          command: cp .circleci/Dockerfile /tmp/build
+
+      - run:
+          name: Create folder for DockerImage
+          command: cp . /tmp/build
+
 #      - run:
 #          name: Build Docker Image
 #          command: docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH .
-##
 #      - run:
 #          name: Push to Docker Hub
 #          command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH
