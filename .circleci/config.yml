@@ -85,12 +85,12 @@ jobs:
           command: cp -r ./* /tmp/build
 
       - run:
-          name: move to Build folder
-          command: cd /tmp/build
+          name: Move to Build Folder and Build !
+          shell: "cd /tmp/build && docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH . "
 
-      - run:
-          name: Build Docker Image
-          command: docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH .
+#      - run:
+#          name: Build Docker Image
+#          command: docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH .
 #      - run:
 #          name: Push to Docker Hub
 #          command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:$CIRCLE_BRANCH
