@@ -18,6 +18,9 @@ class JobControllerTest extends TestCase
         $response->assertResponseOk();
     }
 
+    /**
+     * @group ignore
+     */
     public function testJob104()
     {
         // arrange
