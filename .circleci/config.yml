@@ -2,24 +2,26 @@ version: 2.1
 
 orbs:
   slack: circleci/slack@3.4.0
+  aws-cli: circleci/aws-cli@0.1.16
 
 jobs:
   build:
     docker:
       - image: circleci/php:7.1.32-fpm-node
     working_directory: ~/jobHunter
+    executor: aws-cli/default
     environment:
-      - SOURCE_BRANCH: src
-      - TARGET_BRANCH: master
-      - ZIPFILE_NAME: cc-code.tar.gz
+      - DOCKER_REPO: mouwang
+      - DOCKER_IMAGE: jobhunter-nginx-php
+      - CLUSTER_NAME: FargateStack-fargateserviceautoscalingD107CF93-WNWYOTVT2V2E
+      - SERVICE_NAME: FargateStack-MyApiLoadBalancedFargateService808D6685-OE0WCNBZ8JVD
     steps:
       - checkout
-#      - add_ssh_keys:
-#          fingerprints:
-#            - "9e:b2:7d:7f:da:69:a4:7f:e6:a8:92:33:76:a1:31:e4" # DigitalOcean Manually created this key
-
-      # Download and cache dependencies
-      # PHP - Composer Packages
+      - aws-cli/setup
+      - setup_remote_docker
+      - run:
+          name: check AWS Cli env
+          command: aws --version
       - restore_cache:
           keys:
             # "composer.lock" can be used if it is committed to the repo
@@ -62,6 +64,41 @@ jobs:
           name: Run Unit Test
           command: |
             ./vendor/bin/phpunit --exclude-group ignore --testdox
+
+  ## Docker Related
+      - run:
+          name: Docker Hub Login
+          command: echo "${DOCKER_PASS}" | docker login --username ${DOCKER_USER} --password-stdin
+
+      - run:
+          name: Check Docker Version
+          command: docker -v
+
+      - run:
+          name: Create folder for DockerImage
+          command: mkdir /tmp/build
+
+      - run:
+          name: Copy Dockerfile settings
+          command: cp .circleci/Dockerfile /tmp/build
+
+      - run:
+          name: Create folder for DockerImage
+          command: cp -r ./* /tmp/build
+
+      - run:
+          name: Move to Build Folder && Build
+          command: |
+            cd /tmp/build &&
+            docker build -t ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM} .
+
+      - run:
+          name: Push to Docker Hub
+          command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
+
+#      - run:
+#          name: AWS ECS Force Update
+#          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
 
       - slack/status:
           channel: 'jobhunter-ci'
