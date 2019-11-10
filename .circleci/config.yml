@@ -102,9 +102,9 @@ jobs:
           name: Push to Docker Hub
           command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
 
-#      - run:
-#          name: AWS ECS Force Update
-#          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
+      - run:
+          name: AWS ECS Force Update
+          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
 
       - slack/status:
           channel: 'jobhunter-ci'
@@ -115,7 +115,7 @@ jobs:
       - slack/notify:
           channel: 'jobhunter-ci'
           title: "https://jobhunter.manycat.com.tw CI build Finished."
-          message: "Deployed by CircleCI"
+          message: "${DOCKER_REPO}/${DOCKER_IMAGE}: 0.1.${CIRCLE_BUILD_NUM}"
           color: "#42e2f4" # Optional: Assign custom colors for each notification
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
 
