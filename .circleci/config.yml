@@ -15,6 +15,7 @@ jobs:
       - DOCKER_IMAGE: jobhunter-nginx-php
       - CLUSTER_NAME: FargateStack-fargateserviceautoscalingD107CF93-WNWYOTVT2V2E
       - SERVICE_NAME: FargateStack-MyApiLoadBalancedFargateService808D6685-OE0WCNBZ8JVD
+      - APP_KEY: BNx7BhfE6D3QCntRKJWLsAOEGmOEdaWn
     steps:
       - checkout
       - aws-cli/setup
@@ -85,6 +86,11 @@ jobs:
       - run:
           name: Create folder for DockerImage
           command: cp -r ./* /tmp/build
+
+      # This one for checking.
+      - run:
+          name: Inject Env (non-secret)
+          command: echo APP_KEY=${APP_KEY} >> /tmp/build/.env
 
       - run:
           name: Move to Build Folder && Build
