@@ -98,9 +98,9 @@ Route::resource('mrt', 'MrtController', ['only' => 'index']);
 
 //Just Checking Env Inject
 Route::get('/testEnv', function(){
-    echo env(TEST_CODENAME);
+    echo env('TEST_CODENAME');
 });
 
 Route::get('/testQQ', function(){
-    echo 'Very QQ!';
+    echo 'Very QQ 004!';
 });
