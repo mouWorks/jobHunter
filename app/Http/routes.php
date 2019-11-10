@@ -93,3 +93,8 @@ Route::get('/clear_readed', 'ToolController@clear_readed');
 Route::get('/plugin/firephp', 'PluginController@firephp');
 
 Route::resource('mrt', 'MrtController', ['only' => 'index']);
+
+//Just Checking Env Inject
+Route::get('/testEnv', function(){
+    echo TEST_CODENAME;
+});
