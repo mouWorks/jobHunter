@@ -116,11 +116,19 @@ jobs:
 
       - run:
           name: Register New TaskDef
-          command: aws ecs register-task-definition --cli-input-json file://taskDef.json
+          command: aws ecs register-task-definition --cli-input-json file://taskDef.json >> results.json
+
+      - run:
+          name: Get the Revision Number and pass to reg
+          command: REVISION=$( jq '.taskDefinition.revision' results.json )
 
       - run:
           name: Copy the UpdateService
           command: cp .circleci/registerService.sh /tmp/build
+
+      - run:
+          name: Trigger the update!
+          command: ./updateService.sh
 
 #      - run:
 #          name: AWS ECS Force Update

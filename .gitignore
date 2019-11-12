@@ -6,3 +6,4 @@ Homestead.yaml
 resources/assets/bower/
 .idea/
 .DS_Store
+.circleci/sample.json
