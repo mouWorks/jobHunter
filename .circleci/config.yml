@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   slack: circleci/slack@3.4.0
   aws-cli: circleci/aws-cli@0.1.16
+  jq: circleci/jq@1.9.0
 
 jobs:
   build:
@@ -19,6 +20,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup
+      - jq/install
       - setup_remote_docker
       - run:
           name: check AWS Cli env
@@ -83,10 +85,12 @@ jobs:
           name: Copy Dockerfile settings, TaskDef
           command: |
             cp .circleci/Dockerfile /tmp/build
-            cp .circleci/taskDef.json .
+            cp .circleci/taskTemp.json .
+
       - run:
-          name: Export Build Number as Version
-          command: echo 'export VERSION="${CIRCLE_BUILD_NUM}"' >> $BASH_ENV
+          name: Use jQ to eject current image build number
+          command: jq '.containerDefinitions[0].image = "mouwang/jobhunter-nginx-php:0.1."'+'env.CIRCLE_BUILD_NUM' taskTemp.json > taskDef.json
+
       - run:
           name: Check the taskDef.json
           command: cat taskDef.json
@@ -117,7 +121,6 @@ jobs:
       - run:
           name: Copy the UpdateService
           command: cp .circleci/registerService.sh /tmp/build
-
 
 #      - run:
 #          name: AWS ECS Force Update
