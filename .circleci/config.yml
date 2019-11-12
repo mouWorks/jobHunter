@@ -124,7 +124,7 @@ jobs:
 
       - run:
           name: Copy the UpdateService
-          command: cp .circleci/registerService.sh /tmp/build
+          command: cp .circleci/updateService.sh .
 
       - run:
           name: Trigger the update!
