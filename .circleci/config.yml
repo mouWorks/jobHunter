@@ -80,8 +80,14 @@ jobs:
           command: mkdir /tmp/build
 
       - run:
-          name: Copy Dockerfile settings
-          command: cp .circleci/Dockerfile /tmp/build
+          name: Copy Dockerfile settings, TaskDef
+          command: |
+            cp .circleci/Dockerfile /tmp/build
+            cp .circleci/taskDef.json .
+
+      - run:
+          name: Check the taskDef.json
+          command: cat taskDef.json
 
       - run:
           name: Create folder for DockerImage
@@ -103,8 +109,17 @@ jobs:
           command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
 
       - run:
-          name: AWS ECS Force Update
-          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
+          name: Register New TaskDef
+          command: aws ecs register-task-definition --cli-input-json file://taskDef.json
+
+      - run:
+          name: Copy the UpdateService
+          command: cp .circleci/registerService.sh /tmp/build
+
+
+#      - run:
+#          name: AWS ECS Force Update
+#          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
 
       - slack/status:
           channel: 'jobhunter-ci'

@@ -2,7 +2,7 @@
   "containerDefinitions": [
     {
       "name": "jhWebContaienr",
-      "image": "mouwang/jobhunter-nginx-php:0.1.43",
+      "image": "mouwang/jobhunter-nginx-php:0.1.${CIRCLE_BUILD_NUM}",
       "links": [],
       "portMappings": [
         {
