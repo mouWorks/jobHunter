@@ -120,7 +120,7 @@ jobs:
 
       - run:
           name: Get the Revision Number and pass to reg
-          command: REVISION=$( jq '.taskDefinition.revision' results.json )
+          command: export REVISION=$( jq '.taskDefinition.revision' results.json )
 
       - run:
           name: Copy the UpdateService
