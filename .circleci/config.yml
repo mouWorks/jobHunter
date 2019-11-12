@@ -119,17 +119,19 @@ jobs:
           command: aws ecs register-task-definition --cli-input-json file://taskDef.json >> results.json
 
       - run:
-          name: Get the Revision Number and pass to reg
-          command: export REVISION=$( jq '.taskDefinition.revision' results.json )
-
-      - run:
-          name: Copy the UpdateService
+          name: Copy the UpdateService File
           command: cp .circleci/updateService.sh .
 
       - run:
-          name: Trigger the update!
-          command: ./updateService.sh
+          name: Get the Revision Number and pass to reg
+          command: |
+            export REVISION=$( jq '.taskDefinition.revision' results.json )
+            echo $REVISION
+            ./updateService.sh
 
+#      - run:
+#          name: Trigger the update!
+#          command: ./updateService.sh
 #      - run:
 #          name: AWS ECS Force Update
 #          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
