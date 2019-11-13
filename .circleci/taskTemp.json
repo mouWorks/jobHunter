@@ -27,7 +27,11 @@
         {
           "name": "AWS_CLOUDSEARCH_ENDPOINT",
           "value": "https://doc-job-hunter-fhccdpwhbxzcjpv7njooweyjtq.us-west-2.cloudsearch.amazonaws.com"
-        },
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "secrets": [
         {
           "name": "AWS_ACCESS_KEY",
           "valueFrom": "arn:aws:secretsmanager:us-west-2:419138931779:secret:AWS_ACCESS_KEY-w2xvJz"
@@ -37,9 +41,6 @@
           "valueFrom": "arn:aws:secretsmanager:us-west-2:419138931779:secret:AWS_ACCESS_SECRET-s9Zbek"
         }
       ],
-      "mountPoints": [],
-      "volumesFrom": [],
-      "secrets": [],
       "dnsServers": [],
       "dnsSearchDomains": [],
       "extraHosts": [],
