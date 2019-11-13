@@ -22,7 +22,7 @@
         },
         {
           "name": "TEST_CODENAME",
-          "value": "DeltaForceDavidTest"
+          "value": "Firefox"
         },
         {
           "name": "AWS_CLOUDSEARCH_ENDPOINT",
@@ -47,7 +47,15 @@
       "dockerSecurityOptions": [],
       "dockerLabels": {},
       "ulimits": [],
-      "systemControls": []
+      "systemControls": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "MouFargate",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "Mou"
+        }
+      }
     }
   ],
   "family": "jobHunter-Family",
