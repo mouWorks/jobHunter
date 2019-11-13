@@ -14,7 +14,29 @@
       "essential": true,
       "entryPoint": [],
       "command": [],
-      "environment": [],
+      "environment":
+      [
+        {
+          "name": "APP_KEY",
+          "value": "BNx7BhfE6D3QCntRKJWLsAOEGmOEdaWn"
+        },
+        {
+          "name": "TEST_CODENAME",
+          "value": "DeltaForce"
+        },
+        {
+          "name": "AWS_CLOUDSEARCH_ENDPOINT",
+          "value": "https://doc-job-hunter-fhccdpwhbxzcjpv7njooweyjtq.us-west-2.cloudsearch.amazonaws.com"
+        },
+        {
+          "name": "AWS_ACCESS_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-west-2:419138931779:secret:AWS_ACCESS_KEY-w2xvJz"
+        },
+        {
+          "name": "AWS_ACCESS_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-west-2:419138931779:secret:AWS_ACCESS_SECRET-s9Zbek"
+        }
+      ],
       "mountPoints": [],
       "volumesFrom": [],
       "secrets": [],
@@ -33,5 +55,6 @@
   ],
   "networkMode": "awsvpc",
   "cpu": "256",
-  "memory": "512"
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::419138931779:role/SSMReadValue"
 }
