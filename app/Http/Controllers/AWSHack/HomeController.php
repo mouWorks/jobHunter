@@ -32,12 +32,11 @@ class HomeController extends Controller
 
     public function index()
     {
-        echo '測試測試';exit;
         $conditions = ['page' => 1, 'kws' => '工程師'];
 
         $jobs['104'] = $this->job104->get_jobs($conditions);
 
-        $jobs['ptt'] = $this->jobPtt->get_jobs($conditions);
+//        $jobs['ptt'] = $this->jobPtt->get_jobs($conditions);
 
         $jobs['parttime'] = $this->sdk->cloudSearchDoSearch(
             ['job_title'],

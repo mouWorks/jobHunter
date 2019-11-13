@@ -30,7 +30,8 @@ Route::get('/old_list', 'UpdateController@index');
 Route::get('/old_list/{source}', 'UpdateController@index');
 
 // AWSHack
-Route::get('/', 'AWSHack\HomeController@index');
+Route::get('/', function(){return view('link');});
+Route::get('/test', 'AWSHack\HomeController@index');
 
 Route::get('/awshack/list/104', 'AWSHack\ListController@index');
 Route::get('/awshack/list/ptt', 'AWSHack\ListController@ptt');
