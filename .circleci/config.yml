@@ -14,8 +14,8 @@ jobs:
     environment:
       - DOCKER_REPO: mouwang
       - DOCKER_IMAGE: jobhunter-nginx-php
-      - CLUSTER_NAME: FargateStack-fargateserviceautoscalingD107CF93-10UIXIP3G84N5
-      - SERVICE_NAME: FargateStack-nameserviceServiceE5769334-YH1WVQUWCKP9
+      - CLUSTER_NAME: FargateStack-fargateserviceautoscalingD107CF93-1L43D3RJL9411
+      - SERVICE_NAME: FargateStack-nameserviceServiceE5769334-J159BD0XSLXY
       - APP_KEY: BNx7BhfE6D3QCntRKJWLsAOEGmOEdaWn
     steps:
       - checkout
