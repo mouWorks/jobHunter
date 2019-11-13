@@ -49,7 +49,6 @@ class JobPtt extends JobBase
     {
         // 取得第一筆CloudSearch ptt id
         $first_job_id = $this->_get_first_job_id();
-        $first_job_id = null;
 
         $page = 1;
 
