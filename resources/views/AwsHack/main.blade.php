@@ -50,12 +50,12 @@
 			<span></span>
 		</div>
 		<div id="logo">
-			<a href="index.php"><h1>JobHunter</h1></a>
+			<a href="/"><h1>JobHunter</h1></a>
 		</div>
 		<ul id="nav">
-			<li class="list l1"><a href="104job.php"><span>104職缺</span></a></li>
-			<li class="list l2"><a href="pttjob.php"><span>PTT職缺</span></a></li>
-			<li class="list l3"><a href="ptjob.php"><span>即時打工</span></a></li>
+			<li class="list l1"><a href="/awshack/list/104"><span>104職缺</span></a></li>
+			<li class="list l2"><a href="/awshack/list/ptt"><span>PTT職缺</span></a></li>
+			<li class="list l3"><a href="/awshack/list/pt"><span>即時打工</span></a></li>
 		</ul>
 	</nav>
 	<!--END NAV-->
@@ -64,6 +64,13 @@
 	@include('lists/common_js')
 	@section('customJs')
 	@show
+
+	<div id="btn_top">
+		<a href="javascript:;">PAGE TOP</a>
+	</div>
+	<footer>
+		<div id="footer">Copyright © 2019 JobHunter All Rights Reserved.</div>
+	</footer>
 </body>
 
 </html>

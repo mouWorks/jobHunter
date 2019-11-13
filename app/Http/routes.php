@@ -15,7 +15,6 @@
 Route::get('/welcome', function(){return view('welcome'); });
 
 // 目前的 route 總表，方便測試
-Route::get('/', function(){return view('link');});
 Route::get('/map', function(){return view('gmap/gmap');});
 
 // 工作列表
@@ -31,6 +30,15 @@ Route::get('/old_list', 'UpdateController@index');
 Route::get('/old_list/{source}', 'UpdateController@index');
 
 // AWSHack
+Route::get('/', 'AWSHack\HomeController@index');
+
+Route::get('/awshack/list/104', 'AWSHack\ListController@index');
+Route::get('/awshack/list/ptt', 'AWSHack\ListController@ptt');
+Route::get('/awshack/list/pt', 'AWSHack\ListController@pt');
+
+Route::get('/awshack/job/104/{id}', 'AWSHack\DetailController@index');
+Route::get('/awshack/job/ptt/{id}', 'AWSHack\DetailController@ptt');
+Route::get('/awshack/job/pt/{id}', 'AWSHack\DetailController@pt');
 Route::get('/awshack/jobs/{source}', 'AWSHack\JobController@get_job')->name('awshack.job.show');
 
 // 爬蟲
