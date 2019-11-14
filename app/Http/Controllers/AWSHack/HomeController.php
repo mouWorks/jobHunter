@@ -34,7 +34,25 @@ class HomeController extends Controller
     {
         $conditions = ['page' => 1, 'kws' => '工程師'];
 
-        $jobs['104'] = $this->job104->get_jobs($conditions);
+        $tmpJobs = array_slice($this->job104->get_jobs($conditions), 0, 8);
+
+        $tmpJobs = collect($tmpJobs)->map(function ($job) {
+            $city = mb_substr($job['job_addr_no_descript'], 0, 3);
+            $area = mb_substr($job['job_addr_no_descript'], 3, 3);
+            $job['job_addr_no_descript'] = $city . '</br>' . $area;
+            $job['description'] = nl2br(mb_substr($job['description'], 0, 200));
+            if (!empty($job['sal_month_low']) && !empty($job['sal_month_high'])) {
+                $job['sal_month_low'] = str_replace('000', '', (int) $job['sal_month_low']) . 'K';
+                $job['sal_month_high'] = str_replace('000', '', (int) $job['sal_month_high']) . 'K';
+                $job['salary'] = $job['sal_month_low'] . '~' . $job['sal_month_high'];
+            } else {
+                $job['salary'] = '暫不提供';
+            }
+
+            return $job;
+        });
+
+        $jobs['104'] = $tmpJobs;
 
 //        $jobs['ptt'] = $this->jobPtt->get_jobs($conditions);
 
