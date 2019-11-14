@@ -96,7 +96,12 @@ Route::resource('mrt', 'MrtController', ['only' => 'index']);
 
 //AWSHack
 Route::get('/test', 'AWSHack\HomeController@index');
-
+Route::get('/awshack/list/104', 'AWSHack\ListController@index');
+Route::get('/awshack/list/ptt', 'AWSHack\ListController@ptt');
+Route::get('/awshack/list/pt', 'AWSHack\ListController@pt');
+Route::get('/awshack/job/104/{id}', 'AWSHack\DetailController@index');
+Route::get('/awshack/job/ptt/{id}', 'AWSHack\DetailController@ptt');
+Route::get('/awshack/job/pt/{id}', 'AWSHack\DetailController@pt');
 
 //Just Checking Env Inject
 Route::get('/testEnv', function(){
