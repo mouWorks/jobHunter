@@ -13,9 +13,8 @@
       ],
       "essential": true,
       "entryPoint": [],
-      "command": [
-        [ "CMD-SHELL", "curl -f http://localhost/welcome || exit 1" ]
-      ],
+      "command":
+        [ "CMD-SHELL", "curl -f http://localhost/welcome || exit 1" ],
       "environment": [
         {
           "name": "TEST_CODENAME",
