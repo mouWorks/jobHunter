@@ -102,7 +102,7 @@ jobs:
       # This one for checking.
       - run:
           name: Inject Env (non-secret)
-          command: echo APP_KEY=${APP_KEY} >> /tmp/build/.env
+          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE >> /tmp/build/.env
 
       - run:
           name: Modify Folder Right

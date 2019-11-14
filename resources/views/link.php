@@ -7,7 +7,8 @@
 </head>
 <body>
 <ul>
-	使用步驟 Rollback005 - Now 777 folder - Now add public/resources/AWSHackViews
+	使用步驟 Rollback006 - Now 777 folder - Now add public/resources/AWSHackViews
+    Now Add One Controller
 	<li>1. <a target='_blank' href='/update/104'>更新 104 資料</a></li>
 	<li>2. <a target='_blank' href='/crawler/company/update'>爬蟲 - 更新公司資訊(自動呼叫下一筆)</a></li>
 	<li>3. <a target='_blank' href='/company/test?page_size=50'>Company API 測試</a></li>

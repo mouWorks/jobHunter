@@ -94,6 +94,8 @@ Route::get('/plugin/firephp', 'PluginController@firephp');
 
 Route::resource('mrt', 'MrtController', ['only' => 'index']);
 
+//AWSHack
+Route::get('/test', 'AWSHack\HomeController@index');
 
 
 //Just Checking Env Inject
