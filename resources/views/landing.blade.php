@@ -38,11 +38,10 @@
 <body>
 <div class="container">
     <div class="content">
-        <div class="title">AWS FreeRider</div>
+        <div class="title"><a href="/awshack"> jobHunter</a></div>
     </div>
-    <h1/><a href="/awshack"> jobHunter</a>
+    <h1/>by AWS FreeRider | <?php echo env('TEST_CODENAME'); ?> </h1>
     <p>001</p>
-    <p><?php echo env('TEST_CODENAME'); ?></p>
 </div>
 </body>
 </html>
