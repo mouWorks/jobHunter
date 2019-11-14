@@ -15,7 +15,7 @@
 Route::get('/welcome', function(){return view('welcome'); });
 
 // 目前的 route 總表，方便測試
-//Route::get('/', function(){return view('link');});
+Route::get('/admin', function(){return view('link');}); // -> 改成後台路徑
 
 Route::get('/', function(){return view('landing');}); //Use a landing page
 Route::get('/map', function(){return view('gmap/gmap');});

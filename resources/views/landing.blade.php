@@ -42,6 +42,7 @@
     </div>
     <h1/><a href="/awshack"> jobHunter</a>
     <p>001</p>
+    <p><?php echo env('TEST_CODENAME'); ?></p>
 </div>
 </body>
 </html>
