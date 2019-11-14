@@ -13,11 +13,13 @@
       ],
       "essential": true,
       "entryPoint": [],
-      "command": [],
+      "command": [
+        [ "CMD-SHELL", "curl -f http://localhost/welcome || exit 1" ]
+      ],
       "environment": [
         {
           "name": "TEST_CODENAME",
-          "value": "Joker"
+          "value": "LajiBrother"
         },
         {
           "name": "APP_KEY",

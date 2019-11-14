@@ -15,7 +15,9 @@
 Route::get('/welcome', function(){return view('welcome'); });
 
 // 目前的 route 總表，方便測試
-Route::get('/', function(){return view('link');});
+//Route::get('/', function(){return view('link');});
+
+Route::get('/', function(){return view('landing');}); //Use a landing page
 Route::get('/map', function(){return view('gmap/gmap');});
 
 // 工作列表
@@ -95,7 +97,7 @@ Route::get('/plugin/firephp', 'PluginController@firephp');
 Route::resource('mrt', 'MrtController', ['only' => 'index']);
 
 //AWSHack
-Route::get('/test', 'AWSHack\HomeController@index');
+Route::get('/awshack', 'AWSHack\HomeController@index');
 Route::get('/awshack/list/104', 'AWSHack\ListController@index');
 Route::get('/awshack/list/ptt', 'AWSHack\ListController@ptt');
 Route::get('/awshack/list/pt', 'AWSHack\ListController@pt');
