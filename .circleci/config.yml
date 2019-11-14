@@ -164,3 +164,4 @@ workflows:
               only:
                 - master
                 - 001_Refactor_MySQL
+                - Layout_Mou
