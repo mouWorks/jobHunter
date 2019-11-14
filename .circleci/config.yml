@@ -105,6 +105,10 @@ jobs:
           command: echo APP_KEY=${APP_KEY} >> /tmp/build/.env
 
       - run:
+          name: Modify Folder Right
+          command: chmod 777 -R /tmp/build/storage
+
+      - run:
           name: Move to Build Folder && Build
           command: |
             cd /tmp/build &&
