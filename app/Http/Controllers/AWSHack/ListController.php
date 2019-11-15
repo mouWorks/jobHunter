@@ -13,16 +13,16 @@ class ListController extends Controller
 {
     public function index()
     {
-        return view('AwsHack/Detail/job104');
+        return view('AwsHack/List/list104');
     }
 
     public function ptt()
     {
-        return view('AwsHack/Detail/jobptt');
+        return view('AwsHack/List/listptt');
     }
 
     public function pt()
     {
-        return view('AwsHack/Detail/jobpt');
+        return view('AwsHack/List/listpt');
     }
 }
