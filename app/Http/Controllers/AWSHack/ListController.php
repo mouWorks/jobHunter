@@ -28,9 +28,9 @@ class ListController extends Controller
     public function index(Request $request)
     {
         $location = $request->get('selectLocation') ?? '';
-        $q = $request->get('q') ?? '工程師';
+        $q = $request->get('q');
 
-        $conditions = ['page' => 1, 'kws' => $q, 'area' => $location];
+        $conditions = ['page' => 1, 'kws' => $q ?? '工程師', 'area' => $location];
 
         return view('AwsHack/List/list104', [
             'jobs' => $this->jobService->get104Job($conditions),
