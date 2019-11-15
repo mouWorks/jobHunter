@@ -6,6 +6,11 @@ class ParserService
 {
     public const NO_DESC = '暫不提供';
 
+    public function getDescription(string $description)
+    {
+        return nl2br(mb_substr($description, 0, 200));
+    }
+
     public function getSalaryDesc(int $min, int $max)
     {
         if ($min === 0 && $max === 0) {

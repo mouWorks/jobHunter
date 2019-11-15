@@ -50,7 +50,7 @@
 			<span></span>
 		</div>
 		<div id="logo">
-			<a href="/"><h1>JobHunter</h1></a>
+			<a href="/awshack"><h1>JobHunter</h1></a>
 		</div>
 		<ul id="nav">
 			<li class="list l1"><a href="/awshack/list/104"><span>104職缺</span></a></li>

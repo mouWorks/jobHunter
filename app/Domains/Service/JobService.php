@@ -45,7 +45,7 @@ class JobService
         $jobData = collect($jobData)->map(function ($job) {
             $tmpJob = [];
             $tmpJob['location'] = $this->parserService->getLocationInfo($job['job_addr_no_descript']);
-            $tmpJob['description'] = nl2br(mb_substr($job['description'], 0, 200));
+            $tmpJob['description'] = $this->parserService->getDescription($job['description']);
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['sal_month_low'], $job['sal_month_high']);
             $tmpJob['img'] = $job['company']['img'] ?? null;
             $tmpJob['date'] = date( 'Y-m-d', strtotime($job['appear_date']));
@@ -57,7 +57,7 @@ class JobService
                 'capital' => $job['company']['capital'] ?? ParserService::NO_DESC,
                 'employees' => $job['company']['employees'] ?? ParserService::NO_DESC,
             ];
-            $tmpJob['internal_url'] = './job/104/1';
+            $tmpJob['internal_url'] = '/awshack/job/104/1';
 
             return $tmpJob;
         });
@@ -86,13 +86,14 @@ class JobService
         $pttJob = collect($pttJob)->map(function ($job) {
             $tmpJob = [];
             $tmpJob['title'] = $job['job_title'];
-            $tmpJob['description'] = $job['description'];
+            $tmpJob['description'] = $this->parserService->getDescription($job['description']);
             $tmpJob['location'] = $this->parserService->getLocationInfo($job['region'] ?? '');
             $tmpJob['date'] = date('Y-m-d', substr($job['create_time'], 0, 10));
             $tmpJob['company_name'] = $job['company_name'];
             $tmpJob['id'] = $job['id'];
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['min_salary'], $job['max_salary']);
-            $tmpJob['url'] = $job['url'];
+            $tmpJob['internal_url'] = '/awshack/job/ptt/' . $job['id'];
+            $tmpJob['external_url'] = $job['url'];
 
             return $tmpJob;
         });
@@ -129,6 +130,7 @@ class JobService
             $tmpJob['time'] = $job['time'];
             $tmpJob['id'] = $job['id'];
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['min_salary'], $job['max_salary']);
+            $tmpJob['internal_url'] = '/awshack/job/pt/' . $job['id'];
             return $tmpJob;
         });
 
