@@ -74,13 +74,21 @@ class JobService
             $field = 'job_title';
         }
 
+        $option = [
+            'source' => 'ptt'
+        ];
+
+        if (!empty($condition['location'])) {
+            $option['region'] = $condition['location'];
+        }
+
 
         $pttJob = $this->sdk->cloudSearchDoSearch(
             [$field],
             $condition['kws'],
             20,
             $condition['page'],
-            ['source' => 'ptt']
+            $option
         );
 
         $pttJob = collect($pttJob)->map(function ($job) {

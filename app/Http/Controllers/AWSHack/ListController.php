@@ -42,11 +42,22 @@ class ListController extends Controller
     public function ptt(Request $request)
     {
         $location = $request->get('selectLocation') ?? '';
-        $q = $request->get('q') ?? '';
+
+        $q = $request->get('q');
+
+        $conditions = [
+            'kws' => $q,
+            'page' => 1,
+        ];
+
+        if (!empty($location)) {
+            $conditions['location'] = ViewModule::LOCATIONS[$location] ?? null;
+        }
 
         return view('AwsHack/List/listptt', [
+            'jobs' => $this->jobService->getPttJob($conditions),
             'location_select_box' => $this->viewModule->getLocationSelectBox($location),
-            'q' => $q
+            'q' => $q,
         ]);
     }
 
