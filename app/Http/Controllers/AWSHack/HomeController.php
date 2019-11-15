@@ -24,8 +24,8 @@ class HomeController extends Controller
     {
         $conditions = ['page' => 1, 'kws' => '工程師', 'area' => '6001001000'];
 
-//        $jobs['104'] = $this->jobService->get104Job($conditions);
-        $jobs['104'] = [];
+        $jobs['104'] = $this->jobService->get104Job($conditions);
+//        $jobs['104'] = [];
 
         $jobs['part_time'] = $this->jobService->getPartTimeJob([]);
 
