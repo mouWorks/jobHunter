@@ -12,10 +12,14 @@ class ViewModule
         '6001016000' => '高雄市',
     ];
 
-    public function getLocationSelectBox()
+    public function getLocationSelectBox(string $selectedValue = '')
     {
+        $selectedText = self::LOCATIONS[$selectedValue] ?? 'ALL';
+
         return view('AwsHack/Module/locations', [
-            'locations' => self::LOCATIONS
+            'locations' => self::LOCATIONS,
+            'text' => $selectedText,
+            'value' => $selectedValue,
         ]);
     }
 }

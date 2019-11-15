@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\AWSHack;
 
 use App\Classes\JobBase;
+use App\Domains\Service\JobService;
+use App\Domains\ViewModule\ViewModule;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
@@ -11,18 +13,48 @@ use Illuminate\Http\Request;
 
 class ListController extends Controller
 {
-    public function index()
+    /** @var JobService */
+    private $jobService;
+
+    /** @var ViewModule */
+    private $viewModule;
+
+    public function __construct(JobService $jobService, ViewModule $viewModule)
     {
-        return view('AwsHack/List/list104');
+        $this->jobService = $jobService;
+        $this->viewModule = $viewModule;
     }
 
-    public function ptt()
+    public function index(Request $request)
     {
-        return view('AwsHack/List/listptt');
+        $location = $request->get('selectLocation') ?? '';
+        $q = $request->get('q') ?? '';
+
+        return view('AwsHack/List/list104', [
+            'location_select_box' => $this->viewModule->getLocationSelectBox($location),
+            'q' => $q
+        ]);
     }
 
-    public function pt()
+    public function ptt(Request $request)
     {
-        return view('AwsHack/List/listpt');
+        $location = $request->get('selectLocation') ?? '';
+        $q = $request->get('q') ?? '';
+
+        return view('AwsHack/List/listptt', [
+            'location_select_box' => $this->viewModule->getLocationSelectBox($location),
+            'q' => $q
+        ]);
+    }
+
+    public function pt(Request $request)
+    {
+        $location = $request->get('selectLocation') ?? '';
+        $q = $request->get('q') ?? '';
+
+        return view('AwsHack/List/listpt', [
+            'location_select_box' => $this->viewModule->getLocationSelectBox($location),
+            'q' => $q
+        ]);
     }
 }
