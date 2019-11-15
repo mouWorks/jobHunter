@@ -86,7 +86,7 @@ class Sdk extends \Aws\Sdk
         return;
     }
 
-    public function dynamoGetItem(string $tableName, array $keys): array
+    public function dynamoGetItem(string $tableName, array $keys): ?array
     {
         $keys = array_filter($keys);
 
@@ -98,7 +98,20 @@ class Sdk extends \Aws\Sdk
             'Key' => $item
         ];
 
-        $this->getDynamoDB()->getItem($params);
+        $response = $this->getDynamoDB()->getItem($params)['Item'];
+
+        if (!empty($response)) {
+            $data = [];
+            foreach ($response as $key => $document) {
+                foreach ($document as $value) {
+                    $data[$key] = $value;
+                }
+            }
+        } else {
+            $data = null;
+        }
+
+        return $data;
     }
 
     public function dynamoBatchGetItem(string $table, string $key, string $type, array $values): array

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\AWSHack;
 use App\Classes\JobBase;
 use App\Domains\AWS\Sdk;
 use App\Domains\Service\JobService;
+use App\Domains\Service\ParserService;
 use App\Domains\ViewModule\ViewModule;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -17,9 +18,13 @@ class DetailController extends Controller
     /** @var Sdk*/
     private $sdk;
 
-    public function __construct(Sdk $sdk)
+    /** @var ParserService */
+    private $parserService;
+
+    public function __construct(Sdk $sdk, ParserService $parserService)
     {
         $this->sdk = $sdk;
+        $this->parserService = $parserService;
     }
 
     public function index()
@@ -27,17 +32,24 @@ class DetailController extends Controller
         return view('AwsHack/Detail/job104');
     }
 
-    public function ptt()
+    public function ptt(string $id)
     {
-        $data = $this->sdk->dynamoGetItem('PttJobs', ['id' => 'M.1522660357.A.BAA']);
+        $params = ['id' => $id];
+        $job = $this->sdk->dynamoGetItem('PttJobs', $params);
+        $job['salary'] = $this->parserService->getSalaryDesc($job['min_salary'] ?? 0, $job['max_salary'] ?? 0);
 
-        dd($data);
-
-        return view('AwsHack/Detail/jobptt');
+        return view('AwsHack/Detail/jobptt', [
+            'job' => $job,
+        ]);
     }
 
-    public function pt()
+    public function pt($id)
     {
-        return view('AwsHack/Detail/jobpt');
+        $params = ['pt_code' => $id];
+        $job = $this->sdk->dynamoGetItem('PartTimeJobs', $params);
+
+        return view('AwsHack/Detail/jobpt', [
+            'job' => $job,
+        ]);
     }
 }
