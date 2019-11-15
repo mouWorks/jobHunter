@@ -17,7 +17,7 @@
       "environment": [
         {
           "name": "TEST_CODENAME",
-          "value": "LaserShark"
+          "value": "LaserShark_02"
         },
         {
           "name": "APP_KEY",
