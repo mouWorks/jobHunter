@@ -31,4 +31,19 @@ class ParserService
 
         return $minDesc;
     }
+
+    public function getLocationInfo(string $location)
+    {
+        if (empty($location)) {
+            return self::NO_DESC;
+        }
+
+        if (mb_strlen($location) <= 3) {
+            return $location;
+        }
+
+        $city = mb_substr($location, 0, 3);
+        $area = mb_substr($location, 3, 3);
+        return $city . '</br>' . $area;
+    }
 }

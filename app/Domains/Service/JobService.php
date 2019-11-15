@@ -40,13 +40,11 @@ class JobService
      */
     public function get104Job(array $conditions): array
     {
-        $jobData = array_slice($this->job104->get_jobs($conditions), 0, 8);
+        $jobData = $this->job104->get_jobs($conditions);
 
         $jobData = collect($jobData)->map(function ($job) {
             $tmpJob = [];
-            $city = mb_substr($job['job_addr_no_descript'], 0, 3);
-            $area = mb_substr($job['job_addr_no_descript'], 3, 3);
-            $tmpJob['job_addr_no_descript'] = $city . '</br>' . $area;
+            $tmpJob['location'] = $this->parserService->getLocationInfo($job['job_addr_no_descript']);
             $tmpJob['description'] = nl2br(mb_substr($job['description'], 0, 200));
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['sal_month_low'], $job['sal_month_high']);
             $tmpJob['img'] = $job['company']['img'] ?? null;
@@ -67,32 +65,73 @@ class JobService
         return $jobData->toArray();
     }
 
+    public function getPttJob(array $condition): array
+    {
+        if (empty($condition['kws'])) {
+            $field = 'source';
+            $condition['kws'] = 'ptt';
+        } else {
+            $field = 'job_title';
+        }
+
+
+        $pttJob = $this->sdk->cloudSearchDoSearch(
+            [$field],
+            $condition['kws'],
+            20,
+            $condition['page'],
+            ['source' => 'ptt']
+        );
+
+        $pttJob = collect($pttJob)->map(function ($job) {
+            $tmpJob = [];
+            $tmpJob['title'] = $job['job_title'];
+            $tmpJob['description'] = $job['description'];
+            $tmpJob['location'] = $this->parserService->getLocationInfo($job['region'] ?? '');
+            $tmpJob['date'] = date('Y-m-d', substr($job['create_time'], 0, 10));
+            $tmpJob['company_name'] = $job['company_name'];
+            $tmpJob['id'] = $job['id'];
+            $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['min_salary'], $job['max_salary']);
+            $tmpJob['url'] = $job['url'];
+
+            return $tmpJob;
+        });
+
+        return $pttJob->toArray();
+    }
+
     /**
      * @param array $conditions
      * @return array
      */
     public function getPartTimeJob(array $conditions): array
     {
-        if (empty($conditions)) {
-            $partTimeJob = $this->sdk->cloudSearchDoSearch(
-                ['source'],
-                'parttime',
-                10,
-                1,
-                ['source' => 'parttime']
-            );
-
-            return $partTimeJob;
+        if (empty($condition['kws'])) {
+            $field = 'source';
+            $conditions['kws'] = 'parttime';
+        } else {
+            $field = 'job_title';
         }
 
         $partTimeJob = $this->sdk->cloudSearchDoSearch(
-            ['job_title'],
+            [$field],
             $conditions['kws'],
             20,
             $conditions['page'],
             ['source' => 'parttime']
         );
 
-        return $partTimeJob;
+        $partTimeJob = collect($partTimeJob)->map(function($job){
+            $tmpJob = [];
+            $tmpJob['title'] = $job['job_title'];
+            $tmpJob['description'] = $job['description'];
+            $tmpJob['location'] = $this->parserService->getLocationInfo($job['region'] ?? '');
+            $tmpJob['time'] = $job['time'];
+            $tmpJob['id'] = $job['id'];
+            $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['min_salary'], $job['max_salary']);
+            return $tmpJob;
+        });
+
+        return $partTimeJob->toArray();
     }
 }
