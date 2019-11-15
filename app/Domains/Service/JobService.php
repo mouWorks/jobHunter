@@ -46,7 +46,7 @@ class JobService
             $tmpJob = [];
             $tmpJob['location'] = $this->parserService->getLocationInfo($job['job_addr_no_descript']);
             $tmpJob['description'] = $this->parserService->getDescription($job['description']);
-            $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['sal_month_low'], $job['sal_month_high']);
+            $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['sal_month_low'] ?? 0, $job['sal_month_high'] ?? 0);
             $tmpJob['img'] = $job['company']['img'] ?? null;
             $tmpJob['date'] = date( 'Y-m-d', strtotime($job['appear_date']));
             $tmpJob['source'] = '104';
@@ -54,7 +54,7 @@ class JobService
             $tmpJob['company'] = [
                 'name' => $job['company']['name'],
                 'indcat' => $job['company']['indcat'],
-                'capital' => $job['company']['capital'] ?? ParserService::NO_DESC,
+                'capital' => $this->parserService->num2str($job['company']['capital'] ?? null),
                 'employees' => $job['company']['employees'] ?? ParserService::NO_DESC,
             ];
             $tmpJob['internal_url'] = '/awshack/job/104/1';
@@ -124,10 +124,18 @@ class JobService
 
         $partTimeJob = collect($partTimeJob)->map(function($job){
             $tmpJob = [];
+
+            if (empty($job['create_time'])) {
+                $date = '';
+            } else {
+                $date = date('Y-m-d', substr($job['create_time'] ?? 0, 0, 10));
+            }
+
             $tmpJob['title'] = $job['job_title'];
             $tmpJob['description'] = $job['description'];
             $tmpJob['location'] = $this->parserService->getLocationInfo($job['region'] ?? '');
             $tmpJob['time'] = $job['time'];
+            $tmpJob['date'] = $date;
             $tmpJob['id'] = $job['id'];
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['min_salary'], $job['max_salary']);
             $tmpJob['internal_url'] = '/awshack/job/pt/' . $job['id'];

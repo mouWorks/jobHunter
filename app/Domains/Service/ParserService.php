@@ -51,4 +51,23 @@ class ParserService
         $area = mb_substr($location, 3, 3);
         return $city . '</br>' . $area;
     }
+
+    function num2str($hits){
+        if (empty($hits)) {
+            return self::NO_DESC;
+        }
+        $b=1000;
+
+        $c=10000;
+
+        $d=100000000;
+
+        if ($hits>=$b && $hits<$c) {
+            return floor($hits/$b).'千';
+        } else if ($hits>=$c && $hits<$d) {
+            return floor($hits/$c).'萬';
+        } else {
+            return floor($hits/$d).'億';
+        }
+    }
 }
