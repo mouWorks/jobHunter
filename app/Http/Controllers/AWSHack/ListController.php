@@ -64,9 +64,20 @@ class ListController extends Controller
     public function pt(Request $request)
     {
         $location = $request->get('selectLocation') ?? '';
-        $q = $request->get('q') ?? '';
+
+        $q = $request->get('q');
+
+        $conditions = [
+            'kws' => $q,
+            'page' => 1,
+        ];
+
+        if (!empty($location)) {
+            $conditions['location'] = ViewModule::LOCATIONS[$location] ?? null;
+        }
 
         return view('AwsHack/List/listpt', [
+            'jobs' => $this->jobService->getPartTimeJob($conditions),
             'location_select_box' => $this->viewModule->getLocationSelectBox($location),
             'q' => $q
         ]);

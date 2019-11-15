@@ -43,6 +43,8 @@ class ParserService
             return self::NO_DESC;
         }
 
+        $location = trim($location);
+
         if (mb_strlen($location) <= 3) {
             return $location;
         }

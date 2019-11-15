@@ -65,30 +65,30 @@ class JobService
         return $jobData->toArray();
     }
 
-    public function getPttJob(array $condition): array
+    public function getPttJob(array $conditions): array
     {
-        if (empty($condition['kws'])) {
+        if (empty($conditions['kws'])) {
             $field = 'source';
-            $condition['kws'] = 'ptt';
+            $conditions['kws'] = 'ptt';
         } else {
             $field = 'job_title';
         }
 
-        $option = [
+        $options = [
             'source' => 'ptt'
         ];
 
-        if (!empty($condition['location'])) {
-            $option['region'] = $condition['location'];
+        if (!empty($conditions['location'])) {
+            $options['region'] = $conditions['location'];
         }
 
 
         $pttJob = $this->sdk->cloudSearchDoSearch(
             [$field],
-            $condition['kws'],
+            $conditions['kws'],
             20,
-            $condition['page'],
-            $option
+            $conditions['page'],
+            $options
         );
 
         $pttJob = collect($pttJob)->map(function ($job) {
@@ -115,11 +115,19 @@ class JobService
      */
     public function getPartTimeJob(array $conditions): array
     {
-        if (empty($condition['kws'])) {
+        if (empty($conditions['kws'])) {
             $field = 'source';
             $conditions['kws'] = 'parttime';
         } else {
             $field = 'job_title';
+        }
+
+        $options = [
+            'source' => 'parttime'
+        ];
+
+        if (!empty($conditions['location'])) {
+            $options['region'] = $conditions['location'];
         }
 
         $partTimeJob = $this->sdk->cloudSearchDoSearch(
@@ -127,7 +135,7 @@ class JobService
             $conditions['kws'],
             20,
             $conditions['page'],
-            ['source' => 'parttime']
+            $options
         );
 
         $partTimeJob = collect($partTimeJob)->map(function($job){

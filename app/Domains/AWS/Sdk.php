@@ -192,7 +192,6 @@ class Sdk extends \Aws\Sdk
     {
         $offset = ($page-1) * $perPage;
 
-
         $params = [
             'size' => $perPage,
             'query' => $keyWord, // 關鍵字
