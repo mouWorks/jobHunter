@@ -37,6 +37,7 @@ class DetailController extends Controller
         $params = ['id' => $id];
         $job = $this->sdk->dynamoGetItem('PttJobs', $params);
         $job['salary'] = $this->parserService->getSalaryDesc($job['min_salary'] ?? 0, $job['max_salary'] ?? 0);
+        $job['region'] = '';
 
         return view('AwsHack/Detail/jobptt', [
             'job' => $job,
