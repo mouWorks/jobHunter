@@ -2175,8 +2175,8 @@ section .content_title h2 { width: 100%; font-size: 30px; font-weight: bold; tex
 .product_detail .product_detail_info .product_info_date { font-size: 14px; color: #ccc; margin-bottom: 10px; }
 .product_detail .product_detail_info .product_info_title { font-size: 28px; line-height: 1.2; font-weight: bold; color: #ff9900; margin-bottom: 40px; }
 .product_detail .product_detail_info .product_info_company { margin-bottom: 20px; }
+.product_detail .product_detail_info .product_info_company .product_info_img { padding-right: 15px; }
 .product_detail .product_detail_info .product_info_company .product_info_img img { width: 100%; }
-.product_detail .product_detail_info .product_info_company .product_info_cdes { padding-left: 15px; }
 .product_detail .product_detail_info .product_info_list { margin-bottom: 20px; }
 .product_detail .product_detail_info .product_info_list div { color: #ff9900; font-weight: bold; margin-bottom: 5px; }
 .product_detail .product_detail_info .product_info_list span { display: inline-block; }
@@ -2329,5 +2329,6 @@ section .content_title h2 { width: 100%; font-size: 30px; font-weight: bold; tex
   #btn_top { width: 50px; height: 50px; right: 10px; opacity: 0.6; }
   .btn_back { display: none; } }
 /*Styles for screen 480px and lower*/
+@media screen and (max-width: 480px) { .pagenum li a { width: 20px; height: 20px; padding: 0px 0px; margin: 0px 3px; } }
 
 /*# sourceMappingURL=common.css.map */

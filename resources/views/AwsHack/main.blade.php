@@ -22,15 +22,15 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=10"/>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 	<meta name="format-detection" content="telephone=no"/>
-	<link href="{{ URL::asset('css/animate.min.css') }}" rel="stylesheet" type="text/css"/>
+	<link href="{{ URL::asset('css/animate.min.css') }}?20191116" rel="stylesheet" type="text/css"/>
 	<link href="{{ URL::asset('css/slick.css') }}" rel="stylesheet" type="text/css"/>
-	<link href="{{ URL::asset('css/slick-theme.css') }}" rel="stylesheet" type="text/css"/>
-	<link href="{{ URL::asset('css/common.css') }}" rel="stylesheet" type="text/css"/>
+	<link href="{{ URL::asset('css/slick-theme.css') }}?20191116" rel="stylesheet" type="text/css"/>
+	<link href="{{ URL::asset('css/common.css') }}?20191116" rel="stylesheet" type="text/css"/>
 	<script src="https://www.eztravel.com.tw/events/js/jquery-1.9.1.min.js"></script>
-	<script src="{{ URL::asset('js/jquery-ui-1.8.17.custom.min.js')}}"></script>
+	<script src="{{ URL::asset('js/jquery-ui-1.8.17.custom.min.js')}}?20191116"></script>
 	<script src="https://www.eztravel.com.tw/events/js/bootstrap.min.js"></script>
-	<script src="{{ URL::asset('js/slick.min.js')}}"></script>
-	<script src="{{ URL::asset('js/init.js')}}"></script>
+	<script src="{{ URL::asset('js/slick.min.js')}}?20191116"></script>
+	<script src="{{ URL::asset('js/init.js')}}?20191116"></script>
 	<title>JobFinder</title>
 
 	<!--[if lt IE 9]>

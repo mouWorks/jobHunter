@@ -47,7 +47,7 @@ class JobService
             $tmpJob = [];
             $tmpJob['welfare'] = nl2br($job['welfare'] ?? '');
             $tmpJob['others'] = nl2br($job['others'] ?? '');
-            $tmpJob['location'] = $this->parserService->getLocationInfo($job['job_addr_no_descript']);
+            $tmpJob['location'] = $this->parserService->getLocationInfo($job['job_addr_no_descript'] ?? '');
             $tmpJob['description'] = $this->parserService->getDescription($job['description']);
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['sal_month_low'] ?? 0, $job['sal_month_high'] ?? 0);
             $tmpJob['img'] = $job['company']['img'] ?? null;
