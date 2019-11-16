@@ -43,10 +43,10 @@ class ViewModule
         } else if ($inPage < self::APPEAR_PAGE_COUNT) {
             // 當前頁數小於最大顯示頁數 1 2 3 4 5 6 .. 50
             $startPage = 2;
-            $endPage = self::APPEAR_PAGE_COUNT - 1;
+            $endPage = self::APPEAR_PAGE_COUNT;
         } else if ($totalPage - $inPage + 1 < self::APPEAR_PAGE_COUNT) {
             // 總頁數剪當前頁數小於顯示頁數 1 .. 8 9 10 11 12 13
-            $startPage = $totalPage - self::APPEAR_PAGE_COUNT + 2;
+            $startPage = $totalPage - self::APPEAR_PAGE_COUNT + 1;
             $endPage = $totalPage - 1;
         } else if ($totalPage - $inPage + 1 >= self::APPEAR_PAGE_COUNT) {
             // 總頁數剪當前頁數大於顯示頁數 1 .. 8 9 10 11 12 .. 50
@@ -76,6 +76,7 @@ class ViewModule
             'show_pages' => $showPageNumber,
             'previous_page' => $previousPage,
             'next_page' => $nextPage,
+            'in_page' => $inPage,
             'url' => $url . $queryString,
         ]);
     }
