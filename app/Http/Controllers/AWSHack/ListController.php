@@ -35,7 +35,11 @@ class ListController extends Controller
 
         [$pagination, $jobs] = $this->jobService->get104Job($conditions);
 
-        $paginatinView = $this->viewModule->pagination($pagination['total_page'], $page,'/awshack/list/104?', $_GET);
+        if (!empty($jobs)) {
+            $paginatinView = $this->viewModule->pagination($pagination['total_page'], $page,'/awshack/list/104?', $_GET);
+        } else {
+            $paginatinView = '';
+        }
 
         return view('AwsHack/List/list104', [
             'jobs' => $jobs,

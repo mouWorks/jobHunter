@@ -40,8 +40,8 @@ class JobService
      */
     public function get104Job(array $conditions): array
     {
-        $conditions['pgsz'] = 10;
-        [$pagination , $jobData] = $this->job104->get_jobs($conditions);
+        $conditions['pgsz'] = $conditions['pgsz'] ?? 10;
+        [$pagination, $jobData] = $this->job104->get_jobs($conditions);
 
         $jobData = collect($jobData)->map(function ($job) {
             $tmpJob = [];
@@ -86,7 +86,7 @@ class JobService
             $options['region'] = $conditions['location'];
         }
 
-        $perPage = 10;
+        $perPage = $conditions['pgsz'] ?? 10;
 
         // todo refactory
         $pagination = $this->sdk->cloudSearchPagination(
@@ -143,7 +143,7 @@ class JobService
             $options['region'] = $conditions['location'];
         }
 
-        $perPage = 10;
+        $perPage = $conditions['pgsz'] ?? 10;
 
         // todo refactory
         $pagination = $this->sdk->cloudSearchPagination(

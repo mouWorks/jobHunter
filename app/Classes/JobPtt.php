@@ -402,6 +402,7 @@ class JobPtt extends JobBase
         $descript = str_replace(',', '', $descript);
         $descript = str_replace('K', '000', $descript);
         $descript = str_replace('k', '000', $descript);
+        $descript = str_replace('萬', '0000', $descript);
         $descript = str_replace('$', '', $descript);
         $descript = str_replace('up', '', $descript);
         $descript = str_replace('UP', '', $descript);

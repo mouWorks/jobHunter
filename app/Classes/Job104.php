@@ -320,7 +320,7 @@ class Job104 extends JobBase
         $job_data = Curl::get_json_data($url);
 
         if (is_null($job_data)) {
-            return [];
+            return [null, null];
         }
 
         // c_code 從dynamoDB取得公司資料
