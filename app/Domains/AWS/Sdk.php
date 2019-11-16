@@ -194,6 +194,48 @@ class Sdk extends \Aws\Sdk
         return floor($sec . ($usec * 1000));
     }
 
+    public function cloudSearchPagination(
+        array $options,
+        string $keyWord = '',
+        array $equalParams = [],
+        int $perPage = 20,
+        string $sort = 'create_time desc'
+    )
+    {
+        $params = [
+            'size' => 10000,
+            'query' => $keyWord, // 關鍵字
+            'queryParser' => 'dismax', // http://docs.aws.amazon.com/cloudsearch/latest/developerguide/searching.html
+            'queryOptions' => json_encode(['fields' => $options]),
+            'sort' => $sort, // 排序
+            'start' => 0 // 分頁
+        ];
+
+        if (!empty($equalParams)) {
+            $filterQuery = '(and ';
+
+            foreach ($equalParams as $fieldName => $value) {
+                $filterQuery .= "(term field=$fieldName '$value') ";
+            }
+
+            $filterQuery .= ')';
+
+            $params['filterQuery'] = $filterQuery;
+        }
+
+        $data = $this->getCloudSearch()->search($params);
+
+        $recordCount = $data['hits']['found'];
+        $pageCount = $perPage;
+        $totalPage = ceil($recordCount / $perPage);
+
+        return [
+            'record_count' => $recordCount,
+            'page_count' => $pageCount,
+            'total_page' => $totalPage,
+        ];
+    }
+
     public function cloudSearchDoSearch(
         array $options,
         string $keyWord = '',

@@ -40,6 +40,7 @@ class JobService
      */
     public function get104Job(array $conditions): array
     {
+        $conditions['pgsz'] = 10;
         [$pagination , $jobData] = $this->job104->get_jobs($conditions);
 
         $jobData = collect($jobData)->map(function ($job) {
@@ -85,11 +86,20 @@ class JobService
             $options['region'] = $conditions['location'];
         }
 
+        $perPage = 10;
+
+        // todo refactory
+        $pagination = $this->sdk->cloudSearchPagination(
+            [$field],
+            $conditions['kws'],
+            $options,
+            $perPage
+        );
 
         $pttJob = $this->sdk->cloudSearchDoSearch(
             [$field],
             $conditions['kws'],
-            20,
+            $perPage,
             $conditions['page'],
             $options
         );
@@ -97,7 +107,7 @@ class JobService
         $pttJob = collect($pttJob)->map(function ($job) {
             $tmpJob = [];
             $tmpJob['title'] = $job['job_title'];
-            $tmpJob['description'] = $this->parserService->getDescription($job['description']);
+            $tmpJob['description'] = $this->parserService->getDescription($job['description'] ?? '');
             $tmpJob['location'] = $this->parserService->getLocationInfo($job['region'] ?? '');
             $tmpJob['date'] = date('Y-m-d', substr($job['create_time'], 0, 10));
             $tmpJob['company_name'] = $job['company_name'];
@@ -109,7 +119,7 @@ class JobService
             return $tmpJob;
         });
 
-        return $pttJob->toArray();
+        return [$pagination, $pttJob->toArray()];
     }
 
     /**
@@ -129,6 +139,8 @@ class JobService
             'source' => 'parttime'
         ];
 
+        $perpage = 10;
+
         if (!empty($conditions['location'])) {
             $options['region'] = $conditions['location'];
         }
@@ -136,7 +148,7 @@ class JobService
         $partTimeJob = $this->sdk->cloudSearchDoSearch(
             [$field],
             $conditions['kws'],
-            20,
+            $perpage,
             $conditions['page'],
             $options
         );
