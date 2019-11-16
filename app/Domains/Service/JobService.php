@@ -44,6 +44,8 @@ class JobService
 
         $jobData = collect($jobData)->map(function ($job) {
             $tmpJob = [];
+            $tmpJob['welfare'] = nl2br($job['welfare'] ?? '');
+            $tmpJob['others'] = nl2br($job['others'] ?? '');
             $tmpJob['location'] = $this->parserService->getLocationInfo($job['job_addr_no_descript']);
             $tmpJob['description'] = $this->parserService->getDescription($job['description']);
             $tmpJob['salary'] = $this->parserService->getSalaryDesc($job['sal_month_low'] ?? 0, $job['sal_month_high'] ?? 0);
@@ -58,9 +60,10 @@ class JobService
                 'employees' => $job['company']['employees'] ?? ParserService::NO_DESC,
             ];
             $tmpJob['internal_url'] = '/awshack/job/104/1';
+            $tmpJob['j_code'] = $job['j_code'];
 
             return $tmpJob;
-        });
+        })->keyBy('j_code');
 
         return $jobData->toArray();
     }
