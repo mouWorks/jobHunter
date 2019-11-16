@@ -139,16 +139,24 @@ class JobService
             'source' => 'parttime'
         ];
 
-        $perpage = 10;
-
         if (!empty($conditions['location'])) {
             $options['region'] = $conditions['location'];
         }
 
+        $perPage = 10;
+
+        // todo refactory
+        $pagination = $this->sdk->cloudSearchPagination(
+            [$field],
+            $conditions['kws'],
+            $options,
+            $perPage
+        );
+
         $partTimeJob = $this->sdk->cloudSearchDoSearch(
             [$field],
             $conditions['kws'],
-            $perpage,
+            $perPage,
             $conditions['page'],
             $options
         );
@@ -173,6 +181,6 @@ class JobService
             return $tmpJob;
         });
 
-        return $partTimeJob->toArray();
+        return [$pagination, $partTimeJob->toArray()];
     }
 }

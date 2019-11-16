@@ -59,6 +59,7 @@ class ViewModule
         }
 
         $showPageNumber[] = $lastPage;
+        $showPageNumber = array_unique($showPageNumber);
 
         if ($firstPage === $inPage) {
             $previousPage = 1;

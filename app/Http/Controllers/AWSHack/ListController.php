@@ -80,18 +80,25 @@ class ListController extends Controller
 
         $q = $request->get('q');
 
+        $page = $request->get('page') ?? 1;
+
         $conditions = [
             'kws' => $q,
-            'page' => 1,
+            'page' => $page,
         ];
 
         if (!empty($location)) {
             $conditions['location'] = ViewModule::LOCATIONS[$location] ?? null;
         }
 
+        [$pagination, $jobs] = $this->jobService->getPartTimeJob($conditions);
+
+        $paginatinView = $this->viewModule->pagination($pagination['total_page'], $page,'/awshack/list/pt?', $_GET);
+
         return view('AwsHack/List/listpt', [
-            'jobs' => $this->jobService->getPartTimeJob($conditions),
+            'jobs' => $jobs,
             'location_select_box' => $this->viewModule->getLocationSelectBox($location),
+            'pagination_view' => $paginatinView,
             'q' => $q
         ]);
     }
