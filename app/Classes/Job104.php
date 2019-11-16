@@ -371,7 +371,14 @@ class Job104 extends JobBase
             }
         }
 
-        return $response_job;
+        $pagination = [
+            'record_count' => $job_data['RECORDCOUNT'],
+            'page_count' => $job_data['PAGECOUNT'],
+            'page' => $job_data['PAGE'],
+            'total_page' => $job_data['TOTALPAGE'],
+        ];
+
+        return [$pagination, $response_job];
     }
 
     public function _get_companies(array $c_codes): array

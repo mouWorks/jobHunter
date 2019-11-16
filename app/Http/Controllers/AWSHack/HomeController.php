@@ -24,11 +24,11 @@ class HomeController extends Controller
     {
         $conditions = ['page' => 1, 'kws' => '工程師', 'area' => '6001001000'];
 
-        $jobs['104'] = array_slice($this->jobService->get104Job($conditions), 0, 8);
+        [$paginatin, $jobs['104']] = array_slice($this->jobService->get104Job($conditions), 0, 8);
 
-        $jobs['ptt'] = array_slice($this->jobService->getPttJob($conditions), 0, 8);
+        [$paginatin, $jobs['ptt']] = array_slice($this->jobService->getPttJob($conditions), 0, 8);
 
-        $jobs['part_time'] = array_slice($this->jobService->getPartTimeJob(['page' => 1]), 0, 8);
+        [$paginatin, $jobs['part_time']] = array_slice($this->jobService->getPartTimeJob(['page' => 1]), 0, 8);
 
         return view('AwsHack/home', [
             'jobs' => $jobs,

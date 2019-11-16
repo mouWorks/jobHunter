@@ -29,12 +29,18 @@ class ListController extends Controller
     {
         $location = $request->get('selectLocation') ?? '';
         $q = $request->get('q');
+        $page = $request->get('page') ?? 1;
 
-        $conditions = ['page' => 1, 'kws' => $q ?? '工程師', 'area' => $location];
+        $conditions = ['page' => $page, 'kws' => $q ?? '工程師', 'area' => $location];
+
+        [$pagination, $jobs] = $this->jobService->get104Job($conditions);
+
+        $paginatinView = $this->viewModule->pagination($pagination['total_page'], $page,'/awshack/list/104?', $_GET);
 
         return view('AwsHack/List/list104', [
-            'jobs' => $this->jobService->get104Job($conditions),
+            'jobs' => $jobs,
             'location_select_box' => $this->viewModule->getLocationSelectBox($location),
+            'pagination_view' => $paginatinView,
             'q' => $q
         ]);
     }

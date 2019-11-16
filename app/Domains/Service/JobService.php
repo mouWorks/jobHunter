@@ -40,7 +40,7 @@ class JobService
      */
     public function get104Job(array $conditions): array
     {
-        $jobData = $this->job104->get_jobs($conditions);
+        [$pagination , $jobData] = $this->job104->get_jobs($conditions);
 
         $jobData = collect($jobData)->map(function ($job) {
             $tmpJob = [];
@@ -65,7 +65,7 @@ class JobService
             return $tmpJob;
         })->keyBy('j_code');
 
-        return $jobData->toArray();
+        return [$pagination, $jobData->toArray()];
     }
 
     public function getPttJob(array $conditions): array
