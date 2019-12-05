@@ -89,10 +89,11 @@ jobs:
           name: Create folder for DockerImage
           command: mkdir /tmp/build
 
-#      - run:
-#          name: Copy Dockerfile settings, TaskDef
-#          command: |
-#            cp .circleci/Dockerfile /tmp/build
+      - run:
+          name: Copy Dockerfile settings
+          command: |
+            cp .circleci/Dockerfile /tmp/build
+
 #            cp .circleci/taskTemp.json .
 #      - run:
 #          name: Use jQ to eject current image build number
@@ -103,7 +104,7 @@ jobs:
 #          command: cat taskDef.json
 
       - run:
-          name: Create folder for DockerImage
+          name: Copying files to build folder
           command: cp -r ./* /tmp/build
 
       # This one for checking.
