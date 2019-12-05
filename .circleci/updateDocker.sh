@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export IMAGE_WITH_TAGS="mouwang/jobhunter-nginx-php:0.1.${CIRCLE_BUILD_NUM}"
+export IMAGE_WITH_TAGS="mouwang/jobhunter-nginx-php:0.1.${BUILD_NUM}"
 
 echo ">>> Remove Existing Folder"
 #if [ -d /tmp/jobHunter_deploy ]; then
