@@ -151,7 +151,7 @@ jobs:
 
       - run:
           name: Remote Server Preparing update [Create Deploy Folder]
-          command: ssh ubuntu@${LIGHTSAIL_IP} " cd /tmp && mkdir jobHunter_deploy"
+          command: ssh -o StrictHostKeyChecking=no ubuntu@${LIGHTSAIL_IP} " cd /tmp && mkdir jobHunter_deploy"
 
       - run:
           name: Scp - Copy the file to remote server [Copying Files Over]
