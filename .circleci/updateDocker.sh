@@ -17,9 +17,10 @@ fi
 #tar -xf jobHunter-code.tar.gz -C /tmp/jobHunter_deploy
 
 cd /tmp/jobHunter_deploy && \
-sudo docker stop jobHunter && \
-sudo docker rm jobHunter && \
-sudo docker run -d --name jobHunter -p 80:80 --env-file .env  ${IMAGE_WITH_TAGS}
+sudo docker pull ${IMAGE_WITH_TAGS} && \  # Pull Newest Image
+sudo docker stop jobHunter && \           # Stop Current Container
+sudo docker rm jobHunter && \             # Remove Current Container
+sudo docker run -d --name jobHunter -p 80:80 --env-file .env  ${IMAGE_WITH_TAGS}  # Run Container w/Newest Image
 
 echo  ${IMAGE_WITH_TAGS}
 
