@@ -21,7 +21,7 @@ jobs:
       - AWS_REGION: us-west-2
       - LIGHTSAIL_IP: 52.68.244.159
       - ZIPFILE_NAME: jobHunter-code.tar.gz
-      - TEST_CODENAME: Dexter004
+      - TEST_CODENAME: Dexter005
     steps:
       - checkout
 #      - aws-cli/setup

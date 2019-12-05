@@ -105,11 +105,4 @@ Route::get('/awshack/job/104/{id}', 'AWSHack\DetailController@index');
 Route::get('/awshack/job/ptt/{id}', 'AWSHack\DetailController@ptt');
 Route::get('/awshack/job/pt/{id}', 'AWSHack\DetailController@pt');
 
-//Just Checking Env Inject
-Route::get('/testEnv', function(){
-    echo env('TEST_CODENAME');
-});
-
-Route::get('/testQQ', function(){
-    echo 'Very QQ 004!';
-});
+Route::get('/awshack/pttSync', 'AWSHack\HomeController@pttSync');

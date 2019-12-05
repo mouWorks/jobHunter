@@ -35,4 +35,12 @@ class HomeController extends Controller
             'location_select_box' => $this->viewModule->getLocationSelectBox()
         ]);
     }
+
+    public function pttSync(){
+
+        echo 'PttSync';
+
+        return $this->jobService->pttSync();
+    }
+
 }

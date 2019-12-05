@@ -183,4 +183,15 @@ class JobService
 
         return [$pagination, $partTimeJob->toArray()];
     }
+
+    /**
+     * Sync Ptt Jobs
+     */
+    public function pttSync(){
+
+        // act
+        $result = $this->jobPtt->update_aws();
+
+        dd($result);
+    }
 }
