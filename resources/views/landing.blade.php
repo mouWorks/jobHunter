@@ -41,7 +41,7 @@
         <div class="title"><a href="/awshack"> jobHunter</a></div>
     </div>
     <h1/>by AWS FreeRider | <?php echo env('TEST_CODENAME'); ?> </h1>
-    <p>001</p>
+    <p>Build: <?php echo env('BUILD_NUM');?> </p>
 </div>
 </body>
 </html>
