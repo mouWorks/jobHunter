@@ -14,12 +14,6 @@ if [ -d /tmp/jobHunter_backup ]; then
     rm -rf /tmp/jobHunter_backup
 fi
 
-#echo ">>> Create Temp Folder if Exists, And backup folder"
-#mkdir /tmp/jobHunter_deploy
-#
-#echo ">>> Unzipping files into the folder"
-#tar -xf jobHunter-code.tar.gz -C /tmp/jobHunter_deploy
-
 cd /tmp/jobHunter_deploy && \
 sudo docker pull ${IMAGE_WITH_TAGS} && \  # Pull Newest Image
 sudo docker stop jobHunter && \           # Stop Current Container

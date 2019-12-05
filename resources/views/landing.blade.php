@@ -38,10 +38,10 @@
 <body>
 <div class="container">
     <div class="content">
-        <div class="title"><a href="/awshack"> jobHunter</a></div>
+        <div class="title"><a href="/awshack"> jobHuntr.work</a></div>
     </div>
     <h1/>by AWS FreeRider | <?php echo env('TEST_CODENAME'); ?> </h1>
-    <p>Build: <?php echo env('BUILD_NUM');?> </p>
+    <h3>Build: <?php echo env('BUILD_NUM');?> </h3>
 </div>
 </body>
 </html>
