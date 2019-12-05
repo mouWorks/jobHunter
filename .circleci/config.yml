@@ -21,11 +21,11 @@ jobs:
       - AWS_REGION: us-west-2
       - LIGHTSAIL_IP: 52.68.244.159
       - ZIPFILE_NAME: jobHunter-code.tar.gz
-      - TEST_CODENAME: Dexter002
+      - TEST_CODENAME: Dexter003
     steps:
       - checkout
 #      - aws-cli/setup
-      - jq/install
+#      - jq/install
       - setup_remote_docker
 #      - run:
 #          name: check AWS Cli env
@@ -138,19 +138,13 @@ jobs:
       - run:
           name: Inject Env (secret)
           command: |
-            EnvString="APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${TEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOINT=${CLOUDSEARCH_DOMAIN}\nBUILD_NUM=${CIRCLE_BUILD_NUM}"
+            EnvString="APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_REGION}\nTEST_CODENAME=${TEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOINT=${CLOUDSEARCH_DOMAIN}\nBUILD_NUM=${CIRCLE_BUILD_NUM}"
             echo -e "${EnvString}" >> /tmp/deploy/.env
 
       - run:
           name: Copy the Update Script
           command: |
             cp .circleci/updateDocker.sh /tmp/deploy
-#            export CI_BUILD_NUM=${CIRCLE_BUILD_NUM}
-#            echo $CI_BUILD_NUM
-
-#      - run:
-#          name: Packing the codes
-#          command: tar -czf /tmp/${ZIPFILE_NAME} /tmp/deploy
 
       - run:
           name: Remote Server Preparing update [Create Deploy Folder]
@@ -179,7 +173,6 @@ jobs:
 #            export REVISION=$( jq '.taskDefinition.revision' results.json )
 #            echo $REVISION
 #            ./updateService.sh
-
 #      - run:
 #          name: Trigger the update!
 #          command: ./updateService.sh
