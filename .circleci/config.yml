@@ -137,23 +137,29 @@ jobs:
 
       - run:
           name: Inject Env (secret)
-          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${nTEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOIN=${CLOUDSEARCH_DOMAIN} >> /tmp/deploy/.env
+          command: |
+            EnvString="APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${TEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOINT=${CLOUDSEARCH_DOMAIN}"
+            echo -e "${EnvString}" >> /tmp/deploy/.env
 
       - run:
           name: Copy the Update Script
           command: cp .circleci/updateDocker.sh /tmp/deploy
+#
+#      - run:
+#          name: Packing the codes
+#          command: tar -czf /tmp/${ZIPFILE_NAME} /tmp/deploy
 
       - run:
-          name: Packing the codes
-          command: tar -czf /tmp/${ZIPFILE_NAME} /tmp/deploy/*
+          name: Remote Server Preparing update [Create Deploy Folder]
+          command: ssh ubuntu@${LIGHTSAIL_IP} " cd /tmp && mkdir jobHunter_deploy"
 
       - run:
-          name: Scp - Copy the file to remote server
-          command: scp -o StrictHostKeyChecking=no -P 22 /tmp/${ZIPFILE_NAME} /tmp/deploy/updateDocker.sh ubuntu@${LIGHTSAIL_IP}:/tmp
+          name: Scp - Copy the file to remote server [Copying Files Over]
+          command: scp -o StrictHostKeyChecking=no -P 22 /tmp/deploy/.env /tmp/deploy/updateDocker.sh ubuntu@${LIGHTSAIL_IP}:/tmp/jobHunter_deploy
 
       - run:
           name: Make the Update
-          command: ssh ubuntu@${LIGHTSAIL_IP} " cd /tmp && chmod +x updateDocker.sh && ./updateDocker.sh "
+          command: ssh ubuntu@${LIGHTSAIL_IP} " cd /tmp/jobHunter_deploy && chmod +x updateDocker.sh && ./updateDocker.sh "
 
       ## FargateSide
 #
