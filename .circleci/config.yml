@@ -21,7 +21,7 @@ jobs:
       - AWS_REGION: us-west-2
       - LIGHTSAIL_IP: 52.68.244.159
       - ZIPFILE_NAME: jobHunter-code.tar.gz
-      - TEST_CODENAME: Dexter003
+      - TEST_CODENAME: Dexter004
     steps:
       - checkout
 #      - aws-cli/setup
@@ -128,8 +128,7 @@ jobs:
           name: Push to Docker Hub
           command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
 
-## AWS LightSail (VM Server)
-
+      ## AWS LightSail (VM Server)
       # This one for checking.
       - run:
           name: Create DockerDir
@@ -188,7 +187,7 @@ jobs:
 
       - slack/notify:
           channel: 'jobhunter-ci'
-          title: "https://jobhunter.manycat.com.tw CI build Finished."
+          title: "DeployCompleted! https://jobhuntr.work"
           message: "${DOCKER_REPO}/${DOCKER_IMAGE}: 0.1.${CIRCLE_BUILD_NUM}"
           color: "#42e2f4" # Optional: Assign custom colors for each notification
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK

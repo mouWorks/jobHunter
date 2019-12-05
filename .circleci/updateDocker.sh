@@ -18,7 +18,8 @@ cd /tmp/jobHunter_deploy && \
 sudo docker pull ${IMAGE_WITH_TAGS} && \  # Pull Newest Image
 sudo docker stop jobHunter && \           # Stop Current Container
 sudo docker rm jobHunter && \             # Remove Current Container
-sudo docker run -d --name jobHunter -p 80:80 --env-file .env  ${IMAGE_WITH_TAGS}  # Run Container w/Newest Image
+sudo docker run -d --name jobHunter -p 80:80 --env-file .env  ${IMAGE_WITH_TAGS} && \ # Run Container w/Newest Image
+sudo docker image prune -a -f # Remove previous Images (To save space)
 
 echo  ${IMAGE_WITH_TAGS}
 
