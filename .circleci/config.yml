@@ -21,7 +21,7 @@ jobs:
       - AWS_REGION: us-west-2
       - LIGHTSAIL_IP: 52.68.244.159
       - ZIPFILE_NAME: jobHunter.tar.gz
-      - TEST_CODENAME: Dexter01
+      - TEST_CODENAME: Dexter001
     steps:
       - checkout
       - aws-cli/setup
@@ -109,7 +109,7 @@ jobs:
       # This one for checking.
       - run:
           name: Inject Env (non-secret)
-          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${nTEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOIN=${CLOUDSEARCH_DOMAIN} >> /tmp/build/.env
+          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${nTEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOIN=${CLOUDSEARCH_DOMAIN} >> /tmp/build/.env
 
       - run:
           name: Modify Folder Right
