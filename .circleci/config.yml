@@ -17,6 +17,11 @@ jobs:
       - CLUSTER_NAME: FargateStack-fargateserviceautoscalingD107CF93-1L43D3RJL9411
       - SERVICE_NAME: FargateStack-nameserviceServiceE5769334-J159BD0XSLXY
       - APP_KEY: BNx7BhfE6D3QCntRKJWLsAOEGmOEdaWn
+      - CLOUDSEARCH_DOMAIN: https://doc-job-hunter-fhccdpwhbxzcjpv7njooweyjtq.us-west-2.cloudsearch.amazonaws.com
+      - AWS_REGION: us-west-2
+      - LIGHTSAIL_IP: 52.68.244.159
+      - ZIPFILE_NAME: jobHunter.tar.gz
+      - TEST_CODENAME: Dexter01
     steps:
       - checkout
       - aws-cli/setup
@@ -25,6 +30,9 @@ jobs:
       - run:
           name: check AWS Cli env
           command: aws --version
+      - add_ssh_keys:
+          fingerprints:
+            - "8d:29:e0:9e:a2:27:75:cc:bd:11:28:2d:5b:37:c7:6b" # mouCodes2020
       - restore_cache:
           keys:
             # "composer.lock" can be used if it is committed to the repo
@@ -81,19 +89,18 @@ jobs:
           name: Create folder for DockerImage
           command: mkdir /tmp/build
 
-      - run:
-          name: Copy Dockerfile settings, TaskDef
-          command: |
-            cp .circleci/Dockerfile /tmp/build
-            cp .circleci/taskTemp.json .
-
-      - run:
-          name: Use jQ to eject current image build number
-          command: jq '.containerDefinitions[0].image = "mouwang/jobhunter-nginx-php:0.1."'+'env.CIRCLE_BUILD_NUM' taskTemp.json > taskDef.json
-
-      - run:
-          name: Check the taskDef.json
-          command: cat taskDef.json
+#      - run:
+#          name: Copy Dockerfile settings, TaskDef
+#          command: |
+#            cp .circleci/Dockerfile /tmp/build
+#            cp .circleci/taskTemp.json .
+#      - run:
+#          name: Use jQ to eject current image build number
+#          command: jq '.containerDefinitions[0].image = "mouwang/jobhunter-nginx-php:0.1."'+'env.CIRCLE_BUILD_NUM' taskTemp.json > taskDef.json
+#
+#      - run:
+#          name: Check the taskDef.json
+#          command: cat taskDef.json
 
       - run:
           name: Create folder for DockerImage
@@ -102,11 +109,18 @@ jobs:
       # This one for checking.
       - run:
           name: Inject Env (non-secret)
-          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE >> /tmp/build/.env
+          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${nTEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOIN=${CLOUDSEARCH_DOMAIN} >> /tmp/build/.env
 
       - run:
           name: Modify Folder Right
           command: chmod 777 -R /tmp/build/storage
+
+      - slack/notify:
+          channel: 'jobhunter-ci'
+          title: "[jobHunter] ImageBuilding"
+          message: "${DOCKER_REPO}/${DOCKER_IMAGE}: 0.1.${CIRCLE_BUILD_NUM}"
+          color: "#42e2f4" # Optional: Assign custom colors for each notification
+          webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
 
       - run:
           name: Move to Build Folder && Build
@@ -118,20 +132,39 @@ jobs:
           name: Push to Docker Hub
           command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
 
-      - run:
-          name: Register New TaskDef
-          command: aws ecs register-task-definition --cli-input-json file://taskDef.json >> results.json
+## AWS LightSail
 
       - run:
-          name: Copy the UpdateService File
-          command: cp .circleci/updateService.sh .
+          name: Packing the codes
+          command: tar -czf /tmp/${ZIPFILE_NAME} .
 
       - run:
-          name: Get the Revision Number and pass to reg
-          command: |
-            export REVISION=$( jq '.taskDefinition.revision' results.json )
-            echo $REVISION
-            ./updateService.sh
+          name: Copy the Update Script
+          command: cp .circleci/updateDocker.sh /tmp
+
+      - run:
+          name: Scp - Copy the file to remote server
+          command: scp -o StrictHostKeyChecking=no -P 22 /tmp/${ZIPFILE_NAME} /tmp/updateDocker.sh ubuntu@${LIGHTSAIL_IP}:/tmp
+
+      - run:
+          name: Make the Update
+          command: ssh ubuntu@${LIGHTSAIL_IP} " cd /tmp && chmod +x updateDocker.sh && ./updateDocker.sh "
+
+      ## FargateSide
+#
+#      - run:
+#          name: Register New TaskDef
+#          command: aws ecs register-task-definition --cli-input-json file://taskDef.json >> results.json
+#      - run:
+#          name: Copy the UpdateService File
+#          command: cp .circleci/updateService.sh .
+#
+#      - run:
+#          name: Get the Revision Number and pass to reg
+#          command: |
+#            export REVISION=$( jq '.taskDefinition.revision' results.json )
+#            echo $REVISION
+#            ./updateService.sh
 
 #      - run:
 #          name: Trigger the update!
@@ -161,5 +194,4 @@ workflows:
           filters:
             branches:
               only:
-                - master
-                - 001_Refactor_MySQL
+                - master_lightSail
