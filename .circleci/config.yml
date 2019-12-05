@@ -149,7 +149,7 @@ jobs:
 
       - run:
           name: Scp - Copy the file to remote server
-          command: scp -o StrictHostKeyChecking=no -P 22 /tmp/${ZIPFILE_NAME} /tmp/updateDocker.sh ubuntu@${LIGHTSAIL_IP}:/tmp
+          command: scp -o StrictHostKeyChecking=no -P 22 /tmp/${ZIPFILE_NAME} /tmp/deploy/updateDocker.sh ubuntu@${LIGHTSAIL_IP}:/tmp
 
       - run:
           name: Make the Update
