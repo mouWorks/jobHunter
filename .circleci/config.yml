@@ -145,8 +145,8 @@ jobs:
           name: Copy the Update Script
           command: |
             cp .circleci/updateDocker.sh /tmp/deploy
-            export CI_BUILD_NUM=${CIRCLE_BUILD_NUM}
-            echo $CI_BUILD_NUM
+#            export CI_BUILD_NUM=${CIRCLE_BUILD_NUM}
+#            echo $CI_BUILD_NUM
 
 #      - run:
 #          name: Packing the codes
