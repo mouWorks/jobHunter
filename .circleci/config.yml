@@ -20,16 +20,16 @@ jobs:
       - CLOUDSEARCH_DOMAIN: https://doc-job-hunter-fhccdpwhbxzcjpv7njooweyjtq.us-west-2.cloudsearch.amazonaws.com
       - AWS_REGION: us-west-2
       - LIGHTSAIL_IP: 52.68.244.159
-      - ZIPFILE_NAME: jobHunter.tar.gz
+      - ZIPFILE_NAME: jobHunter-code.tar.gz
       - TEST_CODENAME: Dexter001
     steps:
       - checkout
-      - aws-cli/setup
+#      - aws-cli/setup
       - jq/install
       - setup_remote_docker
-      - run:
-          name: check AWS Cli env
-          command: aws --version
+#      - run:
+#          name: check AWS Cli env
+#          command: aws --version
       - add_ssh_keys:
           fingerprints:
             - "8d:29:e0:9e:a2:27:75:cc:bd:11:28:2d:5b:37:c7:6b" # mouCodes2020
@@ -107,11 +107,6 @@ jobs:
           name: Copying files to build folder
           command: cp -r ./* /tmp/build
 
-      # This one for checking.
-      - run:
-          name: Inject Env (non-secret)
-          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${nTEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOIN=${CLOUDSEARCH_DOMAIN} >> /tmp/build/.env
-
       - run:
           name: Modify Folder Right
           command: chmod 777 -R /tmp/build/storage
@@ -133,15 +128,24 @@ jobs:
           name: Push to Docker Hub
           command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
 
-## AWS LightSail
+## AWS LightSail (VM Server)
+
+      # This one for checking.
+      - run:
+          name: Create DockerDir
+          command:  mkdir /tmp/deploy
 
       - run:
-          name: Packing the codes
-          command: tar -czf /tmp/${ZIPFILE_NAME} .
+          name: Inject Env (secret)
+          command: echo APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_ACCESS_SECRET}\nTEST_CODENAME=${nTEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOIN=${CLOUDSEARCH_DOMAIN} >> /tmp/deploy/.env
 
       - run:
           name: Copy the Update Script
-          command: cp .circleci/updateDocker.sh /tmp
+          command: cp .circleci/updateDocker.sh /tmp/deploy
+
+      - run:
+          name: Packing the codes
+          command: tar -czf /tmp/${ZIPFILE_NAME} /tmp/deploy/*
 
       - run:
           name: Scp - Copy the file to remote server
