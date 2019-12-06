@@ -32,4 +32,30 @@ class JobController extends Controller
 
         return new JsonResponse($response);
     }
+
+    public function get_104_for_line_bot(Request $request)
+    {
+        if (empty($request->get('q'))) {
+            throw new \Exception('搜尋條件不得為空');
+        }
+
+        $job = $this->_create_job(104);
+
+        $conditions = [
+            'kws'  => $request->get('q'),
+            'pgsz' => 10,
+        ];
+
+        $response = $job->get_jobs($conditions);
+        $response = collect($response[1])->map(function($job){
+            return [
+                'title' => $job['title'],
+                'min_salary' => (int) ($job['sal_month_low'] ?? 0),
+                'max_salary' => (int) ($job['sal_month_high'] ?? 0),
+                'url' => 'https://jobhuntr.work/awshack/job/104/' . $job['j_code'],
+            ];
+        });
+
+        return new JsonResponse($response);
+    }
 }

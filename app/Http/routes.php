@@ -34,6 +34,7 @@ Route::get('/old_list/{source}', 'UpdateController@index');
 
 // AWSHack
 Route::get('/awshack/jobs/{source}', 'AWSHack\JobController@get_job')->name('awshack.job.show');
+Route::get('/awshack/jobs/lingbot/104', 'AWSHack\JobController@get_104_for_line_bot')->name('awshack.104job.show');
 
 // 爬蟲
 Route::get('/crawler/company/get/{companyID}', 'CrawlerController@get_company');
