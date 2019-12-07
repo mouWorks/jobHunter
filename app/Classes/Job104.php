@@ -128,6 +128,7 @@ class Job104 extends JobBase
             'jobNo'               =>  isset($row['jobNo']) ? $row['jobNo'] : NULL,
             'jobNoConv'               =>  isset($row['jobNo']) ? base_convert($row['jobNo'],10,36) : NULL,
             'job_addr_no_descript' =>  isset($row['jobAddrNoDesc']) ? $row['jobAddrNoDesc'] : NULL,
+
             'job_address'          =>  isset($row['jobAddress']) ? $row['jobAddress'] : NULL,
             'jobcat_descript'      =>  isset($row['JOBCAT_DESCRIPT']) ? $row['JOBCAT_DESCRIPT'] : NULL, //??
             'description'          =>  isset($row['description']) ? $row['description'] : NULL,
@@ -164,6 +165,10 @@ class Job104 extends JobBase
 //            'ondutytime'           =>  isset($row['ONDUTYTIME']) ? $row['ONDUTYTIME'] : NULL,
 //            'offduty_time'         =>  isset($row['OFFDUTY_TIME']) ? $row['OFFDUTY_TIME'] : NULL,
 //            'others'               =>  isset($row['OTHERS']) ? $row['OTHERS'] : NULL,
+
+            'region' =>  isset($row['jobAddrNoDesc']) ? $row['jobAddrNoDesc'] : NULL, //for Chatbot
+            'company_name' =>  isset($row['custNameRaw']) ? $row['custNameRaw'] : NULL, //for Chatbot
+
         	'source'  			   =>  '104'
         ];
     }

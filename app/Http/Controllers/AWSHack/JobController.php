@@ -58,6 +58,8 @@ class JobController extends Controller
 
             return [
                 'title' => $job['title'],
+                'region' => $job['region'],
+                'company_name' => $job['company_name'],
                 'min_salary' => (int) ($job['sal_month_low'] ?? 0),
                 'max_salary' => (int) ($job['sal_month_high'] ?? 0),
                 'url' => 'https://jobhuntr.work/awshack/job/104/' . $job['j_code'],
