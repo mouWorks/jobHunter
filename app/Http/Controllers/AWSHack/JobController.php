@@ -57,7 +57,7 @@ class JobController extends Controller
         $response = collect($response[1])->map(function($job){
 
             return [
-                'title' => $job['title'],
+                'jobTitle' => $job['title'],
                 'region' => $job['region'],
                 'company_name' => $job['company_name'],
                 'min_salary' => (int) ($job['sal_month_low'] ?? 0),
