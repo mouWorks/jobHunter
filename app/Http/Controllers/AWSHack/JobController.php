@@ -33,6 +33,12 @@ class JobController extends Controller
         return new JsonResponse($response);
     }
 
+    /**
+     * LineBot Result for 104
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
     public function get_104_for_line_bot(Request $request)
     {
         if (empty($request->get('q'))) {
@@ -47,7 +53,9 @@ class JobController extends Controller
         ];
 
         $response = $job->get_jobs($conditions);
+
         $response = collect($response[1])->map(function($job){
+
             return [
                 'title' => $job['title'],
                 'min_salary' => (int) ($job['sal_month_low'] ?? 0),
