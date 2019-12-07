@@ -48,7 +48,7 @@ class JobController extends Controller
         $job = $this->_create_job(104);
 
         $conditions = [
-            'kws'  => $request->get('q'),
+            'keyword'  => $request->get('q'),
             'pgsz' => 10,
         ];
 
