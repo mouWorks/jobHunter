@@ -54,16 +54,19 @@ class JobControllerTest extends TestCase
         $this->assertEquals(20, count($result));
     }
 
-//    public function testJobPttWrite()
-//    {
-//        // arrange
-//        /** @var JobPtt $job */
-//        $job = $this->app->make(JobPtt::class);
-//
-//        // act
-//        $result = $job->update_aws();
-//
-//        // assert
-//        dd($result);
-//    }
+    /**
+     * @group davidtest
+     */
+    public function testJobPttWrite()
+    {
+        // arrange
+        /** @var JobPtt $job */
+        $job = $this->app->make(JobPtt::class);
+
+        // act
+        $result = $job->update_aws();
+
+        // assert
+        dd($result);
+    }
 }
