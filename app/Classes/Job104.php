@@ -332,7 +332,7 @@ class Job104 extends JobBase
         // 取得job資料 w/NewApi
         $ApiResult = Curl::get_json_data($url);
 
-        $job_data = $ApiResult['data']['list'];
+        $job_data = $ApiResult['data']['list'] ?? null;
 
         if (is_null($job_data)) {
             return [null, null];
