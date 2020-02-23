@@ -172,6 +172,9 @@ jobs:
       - run:
           name: Checking helm env
           command: helm ls
+      - run:
+          name: Checking helm Version
+          command: helm version
       - helm/upgrade-helm-chart:
           release-name: jobhunter
           chart: "./helmChart"
