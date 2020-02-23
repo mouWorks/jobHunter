@@ -171,7 +171,7 @@ jobs:
             export "${EnvString}"
 
       - helm/upgrade-helm-chart:
-          release-name: jobHunter
+          release-name: jobhunter
           chart: "./helmChart"
           version: 1.0.42
       - slack/status:
