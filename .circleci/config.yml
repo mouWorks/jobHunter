@@ -163,6 +163,12 @@ jobs:
           name: Update AppVersion in Chart.yaml
           command: |
             echo 'appVersion: 1.0.'${CIRCLE_PREVIOUS_BUILD_NUM} >> helmChart/Chart.yaml
+      - run:
+          name: Inject Env (secret) for HelmSecrets
+          command: |
+            EnvString="APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_REGION}\nTEST_CODENAME=${TEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOINT=${CLOUDSEARCH_DOMAIN}\nBUILD_NUM=${CIRCLE_BUILD_NUM}"
+            echo -e "${EnvString}"
+
       - helm/upgrade-helm-chart:
           release-name: jobHunter
           chart: "./helmChart"
@@ -186,7 +192,7 @@ workflows:
           filters:
             branches:
               only:
-                - master_lightSail
+                - master_k8s
       - helm-deploy:
           cluster-name: mouworks-cluster
           app-version: 1.0.${CIRCLE_PREVIOUS_BUILD_NUM}
