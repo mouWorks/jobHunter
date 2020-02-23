@@ -175,7 +175,6 @@ jobs:
       - helm/upgrade-helm-chart:
           release-name: jobhunter
           chart: "./helmChart"
-          version: 1.0.42
       - slack/status:
           channel: 'jobhunter-ci'
           failure_message: "CI build Fail! , Check CircleCI"
