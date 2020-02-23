@@ -169,7 +169,9 @@ jobs:
           command: |
             EnvString="APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_REGION}\nTEST_CODENAME=${TEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOINT=${AWS_CLOUDSEARCH_ENDPOINT}\nBUILD_NUM=${CIRCLE_BUILD_NUM}"
             export "${EnvString}"
-
+      - run:
+          name: Checking helm env
+          command: helm ls
       - helm/upgrade-helm-chart:
           release-name: jobhunter
           chart: "./helmChart"
