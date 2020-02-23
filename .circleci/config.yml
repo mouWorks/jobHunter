@@ -1,5 +1,5 @@
 version: 2.1
-# This version deploy to k8s
+# This version deploy to k8s - it shall work
 orbs:
   helm: circleci/helm@0.2.3
   aws-cli: circleci/aws-cli@0.1.16
