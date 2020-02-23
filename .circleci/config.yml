@@ -163,7 +163,7 @@ jobs:
       - run:
           name: Update AppVersion in Chart.yaml
           command: |
-            echo 'appVersion: 1.0.'${CIRCLE_PREVIOUS_BUILD_NUM} >> helmChart/Chart.yaml
+            echo 'appVersion: 0.1.'${CIRCLE_PREVIOUS_BUILD_NUM} >> helmChart/Chart.yaml
       - run:
           name: Inject Env (secret) for HelmSecrets
           command: |
