@@ -31,32 +31,32 @@ spec:
             valueFrom:
               secretKeyRef:
                 key:  test_codename
-                name: {{ .Release.Name }}-auth
+                name: {{ .helmChart.Name }}-auth
           - name: "APP_KEY"
             valueFrom:
               secretKeyRef:
                 key:  app_key
-                name: {{ .Release.Name }}-auth
+                name: {{ .helmChart.Name }}-auth
           - name: "AWS_CLOUDSEARCH_ENDPOINT"
             valueFrom:
               secretKeyRef:
                 key:  aws_cloudsearch_endpoint
-                name: {{ .Release.Name }}-auth
+                name: {{ .helmChart.Name }}-auth
           - name: "AWS_REGION"
             valueFrom:
               secretKeyRef:
                 key:  aws_region
-                name: {{ .Release.Name }}-auth
+                name: {{ .helmChart.Name }}-auth
           - name: "AWS_ACCESS_KEY"
             valueFrom:
               secretKeyRef:
                 key:  aws_access_key
-                name: {{ .Release.Name }}-auth
+                name: {{ .helmChart.Name }}-auth
           - name: "AWS_SECRET_KEY"
             valueFrom:
               secretKeyRef:
                 key:  aws_secret_key
-                name: {{ .Release.Name }}-auth
+                name: {{ .helmChart.Name }}-auth
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
