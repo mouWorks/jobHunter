@@ -69,10 +69,10 @@ jobs:
             chmod +x phpunit-7.5.phar
             mv phpunit-7.5.phar phpunit
 
-      - run:
-          name: Run Unit Test
-          command: |
-            ./vendor/bin/phpunit --exclude-group ignore --testdox
+#      - run:
+#          name: Run Unit Test
+#          command: |
+#            ./vendor/bin/phpunit --exclude-group ignore --testdox
 
   ## Docker Related
       - run:
