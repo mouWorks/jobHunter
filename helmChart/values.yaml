@@ -64,3 +64,10 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+test_codename: 'test'
+app_key: 'test'
+aws_cloudsearch_endpoint: 'test'
+aws_region: 'test'
+aws_access_key: 'test'
+aws_secret_key: 'test'
