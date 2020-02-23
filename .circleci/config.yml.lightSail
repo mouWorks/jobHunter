@@ -1,14 +1,12 @@
 version: 2.1
 
 orbs:
-  helm: circleci/helm@0.2.3
-  aws-cli: circleci/aws-cli@0.1.16
-  aws-eks: circleci/aws-eks@0.2.1
   slack: circleci/slack@3.4.0
+  aws-cli: circleci/aws-cli@0.1.16
   jq: circleci/jq@1.9.0
 
 jobs:
-  build-image:
+  build:
     docker:
       - image: circleci/php:7.1.32-fpm-node
     working_directory: ~/jobHunter
@@ -16,10 +14,14 @@ jobs:
     environment:
       - DOCKER_REPO: mouwang
       - DOCKER_IMAGE: jobhunter-nginx-php
+      - CLUSTER_NAME: FargateStack-fargateserviceautoscalingD107CF93-1L43D3RJL9411
+      - SERVICE_NAME: FargateStack-nameserviceServiceE5769334-J159BD0XSLXY
       - APP_KEY: BNx7BhfE6D3QCntRKJWLsAOEGmOEdaWn
       - CLOUDSEARCH_DOMAIN: https://doc-job-hunter-fhccdpwhbxzcjpv7njooweyjtq.us-west-2.cloudsearch.amazonaws.com
       - AWS_REGION: us-west-2
-      - TEST_CODENAME: Dexter008
+      - LIGHTSAIL_IP: 52.68.244.159
+      - ZIPFILE_NAME: jobHunter-code.tar.gz
+      - TEST_CODENAME: Dexter007
     steps:
       - checkout
 #      - aws-cli/setup
@@ -92,6 +94,15 @@ jobs:
           command: |
             cp .circleci/Dockerfile /tmp/build
 
+#            cp .circleci/taskTemp.json .
+#      - run:
+#          name: Use jQ to eject current image build number
+#          command: jq '.containerDefinitions[0].image = "mouwang/jobhunter-nginx-php:0.1."'+'env.CIRCLE_BUILD_NUM' taskTemp.json > taskDef.json
+#
+#      - run:
+#          name: Check the taskDef.json
+#          command: cat taskDef.json
+
       - run:
           name: Copying files to build folder
           command: cp -r ./* /tmp/build
@@ -117,78 +128,76 @@ jobs:
           name: Push to Docker Hub
           command: docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:0.1.${CIRCLE_BUILD_NUM}
 
-  helm-deploy:
-    executor: aws-eks/python
-    environment:
-      - DOCKER_REPO: mouwang
-      - DOCKER_IMAGE: jobhunter-nginx-php
-      - CLUSTER_NAME: mouworks-cluster
-    parameters:
-      cluster-name:
-        description: ClusterName
-        type: string
-      app-version:
-        description: AppVersion for image
-        type: string
-    working_directory: ~/jobHunter
-    steps:
-      - checkout
-      - helm/install-helm-client:
-          version: v3.0.0
+      ## AWS LightSail (VM Server)
+      # This one for checking.
       - run:
-          name: helm repo
-          command: helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-      - aws-cli/setup
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-          install-kubectl: true
-      - run:
-          name: Where Am I ?
-          command: pwd
-      - run:
-          name: list files
-          command: ls
-      - run:
-          name: check Pipeline Value
-          command: echo ${CIRCLE_WORKFLOW_ID}
-      - run:
-          name: check Circle SHA
-          command: echo ${CIRCLE_SHA}
-      - run:
-          name: check Image build Num
-          command: echo ${CIRCLE_PREVIOUS_BUILD_NUM}
+          name: Create DockerDir
+          command:  mkdir /tmp/deploy
 
-      ## AWS Eks update
       - run:
-          name: Update AppVersion in Chart.yaml
+          name: Inject Env (secret)
           command: |
-            echo 'appVersion: 1.0.'${CIRCLE_PREVIOUS_BUILD_NUM} >> helmChart/Chart.yaml
-      - helm/upgrade-helm-chart:
-          release-name: jobHunter
-          chart: "./helmChart"
-          version: 1.0.42
+            EnvString="APP_KEY=${APP_KEY}\nAPP_DEBUG=TRUE\nAWS_ACCESS_KEY=${AWS_ACCESS_KEY}\nAWS_ACCESS_SECRET=${AWS_ACCESS_SECRET}\nAWS_REGION=${AWS_REGION}\nTEST_CODENAME=${TEST_CODENAME}\nAWS_CLOUDSEARCH_ENDPOINT=${CLOUDSEARCH_DOMAIN}\nBUILD_NUM=${CIRCLE_BUILD_NUM}"
+            echo -e "${EnvString}" >> /tmp/deploy/.env
+
+      - run:
+          name: Copy the Update Script
+          command: |
+            cp .circleci/updateDocker.sh /tmp/deploy
+
+      - run:
+          name: Remote Server Preparing update [Create Deploy Folder]
+          command: ssh -o StrictHostKeyChecking=no ubuntu@${LIGHTSAIL_IP} " cd /tmp && mkdir jobHunter_deploy"
+
+      - run:
+          name: Scp - Copy the file to remote server [Copying Files Over]
+          command: scp -o StrictHostKeyChecking=no -P 22 /tmp/deploy/.env /tmp/deploy/updateDocker.sh ubuntu@${LIGHTSAIL_IP}:/tmp/jobHunter_deploy
+
+      - run:
+          name: Make the Update
+          command: ssh ubuntu@${LIGHTSAIL_IP} " cd /tmp/jobHunter_deploy && chmod +x updateDocker.sh && ./updateDocker.sh "
+
+      ## FargateSide
+#
+#      - run:
+#          name: Register New TaskDef
+#          command: aws ecs register-task-definition --cli-input-json file://taskDef.json >> results.json
+#      - run:
+#          name: Copy the UpdateService File
+#          command: cp .circleci/updateService.sh .
+#
+#      - run:
+#          name: Get the Revision Number and pass to reg
+#          command: |
+#            export REVISION=$( jq '.taskDefinition.revision' results.json )
+#            echo $REVISION
+#            ./updateService.sh
+#      - run:
+#          name: Trigger the update!
+#          command: ./updateService.sh
+#      - run:
+#          name: AWS ECS Force Update
+#          command: aws ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --force-new-deployment
+
       - slack/status:
           channel: 'jobhunter-ci'
           failure_message: "CI build Fail! , Check CircleCI"
           fail_only: true
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
+
       - slack/notify:
           channel: 'jobhunter-ci'
           title: "DeployCompleted! https://jobhuntr.work"
           message: "${DOCKER_REPO}/${DOCKER_IMAGE}: 0.1.${CIRCLE_BUILD_NUM}"
           color: "#42e2f4" # Optional: Assign custom colors for each notification
           webhook: ${SLACK_WEBHOOK} # Optional: Enter a specific webhook here or the default will use $SLACK_WEBHOOK
+
 workflows:
   version: 2.1
-  deployment:
+  build_and_auto_deploy:
     jobs:
-      - build-image:
+      - build:
           filters:
             branches:
               only:
                 - master_lightSail
-      - helm-deploy:
-          cluster-name: mouworks-cluster
-          app-version: 1.0.${CIRCLE_PREVIOUS_BUILD_NUM}
-          requires:
-            - build-image
